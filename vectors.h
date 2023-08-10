@@ -17,7 +17,6 @@ source file. I hope, it will be useful...
 + angle()
 + isorthonal()
 + isparallel()
-
 */
  
 #include <stdio.h>

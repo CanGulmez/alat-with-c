@@ -51,8 +51,7 @@ a tons of basics and advanced methods. I hope, it will be useful...
    - adjoint()
    - inverse()
    - cross_div()
-   - solve()
-   
+   - solve()  
 */
 
 #include <stdio.h>
@@ -177,11 +176,6 @@ void _switch_rows_(int row, int col, float matrix[row][col],
    // And replace the 'array1' and 'array2' onto 'matrix'.
    for (int j=0; j<col; j++) matrix[index][j] = array2[0][j];
    for (int j=0; j<col; j++) matrix[nonzerorow][j] = array1[0][j];
-   // Lastly, multiply the 'matrix' by -1.
-   // for (int i=0; i<row; i++)
-   //    for (int j=0; j<col; j++)
-   //       if (matrix[i][j] != 0.0)
-   //          matrix[i][j] = -1 * matrix[i][j];
 } 
 
 /* -------------------------------------------------------------- */
@@ -295,24 +289,32 @@ void sequential(float initial, float end, int row, int col,
    result[i][j] = total; total += step; }}
 }
 
-/* Generate new matrix that contains just random integer. */
+/* Generate the new random positive integer matrix. */
 void randint(int initial, int end, int row, int col, 
              float result[row][col]) {
-   // Previously, adjust seed to random with 'time.h' library.
-   srand(time(NULL)); int integer;
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) { 
-   while (true) {
-      // Generate the random integer.
-      integer = rand() % (end + 1);
-      if (integer >= initial) break;
+   // Raise error, if parameters are inconsistent.
+   if (end < initial) {
+      puts("MatrixError: 'end' must be bigger than 'initial'.");
+      exit(EXIT_FAILURE);
    }
-   // Append the random integer onto 'result' matrix.
-   result[i][j] = (float) integer; }} 
+   // Previously, adjust seed to random with 'srand' method.
+   srand(time(NULL)); float integer;
+   // Iterate the 'result' matrix and put the random integers.
+   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
+      // According to signs of 'initial' and 'end' parameters, 
+      // can be indicated 4 conditions.
+      while (true) {
+         // Generate the random positive integer.
+         integer = rand() % (end + 1);
+         if (integer >= initial) break;
+      }
+      // Append the random 'integer' into 'result'.
+      result[i][j] = integer;
+   }}
 }
 
 /* Return true, if given two matrix are equals for each other. */
-bool isequal(int row, int col, float matrix1[row][col], 
+bool isequal(int row, int col, float matrix1[row][col],  
              float matrix2[row][col]) {
    // Count the same elements.
    int equal = 0;

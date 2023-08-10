@@ -10,7 +10,6 @@ I hope, it will be useful...
 + encode()
 + decode()
 + to_message()
-
 */
 
 #include <stdio.h>

@@ -9,7 +9,6 @@ of tetrahedron using determinant. I hope, it will be useful...
 + least_squares_reg
 + area
 + volume
-
 */
 
 #include <stdio.h>
