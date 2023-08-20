@@ -10,7 +10,7 @@ Resource: Elementary Linear Algebra, Sixth Edition by Ron LARSON, David C. FALVO
 
 ## Features
 
-I've seperated this project into 4 parts mainly. First is Matrices class which contain 
-the methods related to matrix operations. Second is Vectors class which contain the 
-methods about vector operations. Third is Apps class which contain the common applications 
-related with linear algebra. Fourth is Crypts which provide the cryptography operations.
+I've seperated this project into 4 parts mainly. First is `Matrices` class which contain 
+the methods related to matrix operations. Second is `Vectors` class which contain the 
+methods about vector operations. Third is `Apps` class which contain the common applications 
+related with linear algebra. Fourth is `Crypts` which provide the cryptography operations.
