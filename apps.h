@@ -33,10 +33,10 @@ void poly_curve_fitting(int len, float x_points[len],
          if (index == bound) break; }
    }
    // Get the inverse of 'xsmatrix' matrix.
-   if (isinvertible(len, len, xsmatrix) == false) {
-      puts("AppsError: 'xsmatrix' must be invertible");
-      exit(EXIT_FAILURE);
-   }
+   if (isinvertible(len, len, xsmatrix) == false) 
+      _raise_error_("AppError", __FILE__, 
+                    "'xsmatrix' must be invertible.", __LINE__);
+
    xsmatrix[len][len]; inverse(len, len, xsmatrix, xsmatrix);
    // Convert the 'ys' array to the matrix.
    float ysmatrix[1][len]; 
@@ -53,6 +53,7 @@ void poly_curve_fitting(int len, float x_points[len],
 /* Least Squares Regression */
 void least_squares_reg(int len, float x_points[len], 
                        float y_points[len], float result[2]) {
+
    // Initially, generate the ones matrix and then
    float matrix[2][len]; ones(2, len, matrix);
    // replace the elements with 'xs'.
@@ -83,6 +84,7 @@ void least_squares_reg(int len, float x_points[len],
 
 /* Calculate the area of triangle using determinant */
 float area(float coor1[2], float coor2[2], float coor3[2]) {
+
    // Generate the ones 'matrix' and then replace the
    float matrix[3][3]; ones(3, 3, matrix);
    // elements with coordinates.
@@ -101,6 +103,7 @@ float area(float coor1[2], float coor2[2], float coor3[2]) {
 /* Calculate the volume of tetrahedron using determinant */
 float volume(float coor1[3], float coor2[3], float coor3[3], 
              float coor4[3]) {
+
    // Collect the points in 'matrix'. Initially, generate the ones
    // matrix and then replace the elements with points.
    float matrix[4][4]; ones(4, 4, matrix);

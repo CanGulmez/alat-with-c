@@ -29,18 +29,17 @@ abcdefghijklmnopqrstuvwxyz\
 "
 
 /* Convert the 'message' to square 'matrix'. */
-void to_matrix(char* msg, int row, int col, 
-               float result[row][col]) {
+void to_matrix(char* msg, int row, int col, float result[row][col]){
+
    // Check if 'matrix' has enough dimension.
-   if (strlen(msg) > row*col) {
-      puts("CryptsError: Insufficient matrix dimension");
-      exit(EXIT_FAILURE);
-   }
+   if (strlen(msg) > row*col)  
+      _raise_error_("CryptError", __FILE__,
+                    "Insufficient matrix dimension.", __LINE__);
    // Check if the 'matrix' is square or not.
-   if (row != col) {
-      puts("CryptsError: 'matrix' must be square");
-      exit(EXIT_FAILURE);
-   }
+   if (row != col)  
+      _raise_error_("CryptError", __FILE__,
+                    "'row' and 'col' must be equal.", __LINE__);
+
    // Find the numbers according to chars.
    int index = 0; 
    float array[row * col]; 
@@ -48,9 +47,9 @@ void to_matrix(char* msg, int row, int col,
    for (int i=0; i<strlen(msg); i++) { 
       if (_is_in_(msg[i], CRYPT)) 
          array[index] = _get_index_(msg[i], CRYPT); 
-      else {
-      printf("CryptsError: Can not found '%c' character\n", msg[i]);
-      exit(EXIT_FAILURE); } index ++; 
+      else _raise_error_("CryptError", __FILE__,
+            "Found unidentified character/s.", __LINE__);
+      index ++; 
    }
    index = 0;
    // If there are missing elements of 'array', fill in it.
@@ -64,11 +63,16 @@ void to_matrix(char* msg, int row, int col,
 /* Encode just raw matrix with 'encoding' matrix. */
 void encode(char* msg, int row, int col, float encoding[row][col], 
             float result[row][col]) {
+
+   // Check if the 'ebcoding' is square or not.
+   if (row != col)  
+      _raise_error_("CryptError", __FILE__,
+                    "'row' and 'col' must be equal.", __LINE__);
    // Check if 'encoding' matrix is invertible or not.
-   if (isinvertible(row, col, encoding) == false) {
-      puts("CryptsError: 'encoding' matrix must not be invertible");
-      exit(EXIT_FAILURE);
-   }
+   if (isinvertible(row, col, encoding) == false) 
+      _raise_error_("CryptError", __FILE__,
+               "'encoding' matrix must be invertible.", __LINE__);
+
    // Convert the 'message' into matrix.
    float matrix[row][col]; to_matrix(msg, row, col, matrix);
    // Finally, multiply 'matrix' and 'encoding' as cross.
@@ -78,15 +82,17 @@ void encode(char* msg, int row, int col, float encoding[row][col],
 /* Decode the 'encoded' matrix with 'decoding' matrix. */
 void decode(int row, int col, float encoded[row][col], 
             float encoding[row][col], float result[row][col]) {
+
    // Check if 'encoding' matrix is invertible or not.
-   if (isinvertible(row, col, encoding) == false) {
-      puts("CryptsError: 'encoding' matrix must not be invertible");
-      exit(EXIT_FAILURE); 
-   }
+   if (isinvertible(row, col, encoding) == false) 
+      _raise_error_("CryptError", __FILE__,
+         "'encoding' matrix must be invertible.", __LINE__);
+
    // Calculate the inverse of 'decoding' matrix.
    float inversed[row][col]; inverse(row, col, encoding, inversed);
    // Multiply the 'encoded' and 'inversed' matrix.
    cross_mul(row, col, encoded, row, col, inversed, result);
+
    // Lastly, round the all elements of 'result' for ensure.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = round(result[i][j]); }}
@@ -95,11 +101,13 @@ void decode(int row, int col, float encoded[row][col],
 /* Convert 'decoded' matrix to message. */
 char* to_message(int row, int col, float encoded[row][col], 
                  float encoding[row][col]) {
+
    int index = 0;
    char* message = (char*) calloc(row * col, sizeof(char));
    // Previously decode 'encoded' matrix.
    float decoded[row][col]; 
    decode(row, col, encoded, encoding, decoded);
+
    // Find the characters corresponding to 'decoded' elements.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    if (decoded[i][j] != 0) 

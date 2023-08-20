@@ -21,13 +21,13 @@ David C. FALVO
 
 #define AUTHOR   "Can Gulmez"
 #define EMAIL    "ahmetcangulmez02gmail.com"
-#define VERSION  "1.0.0"
+#define VERSION  "1.4.0"
 #define RESOURCE "Elementary Linear Algebra, \
                   Sixth Edition by\
                   Ron Larson, David C. FALVO"
 
-/* -------------------------------------------------------------- */
-/* -------------------------------------------------------------- */
+/* --------------------------------------------------------------- */
+/* --------------------------------------------------------------- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,11 +35,12 @@ David C. FALVO
 // #include "vectors.h"
 // #include "apps.h"
 // #include "crypts.h"
-
+ 
 /* Can be used this method for displaying any matrix. */
 void _display_matrix_(int row, int col, float matrix[row][col]) {
    // Iterate the 'matrix' and then display all elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
+   for (int i=0; i<row; i++) { 
+      for (int j=0; j<col; j++) {
          printf("%f ", matrix[i][j]); }
       // Put the new line at the end of each row. 
       printf("\n"); }

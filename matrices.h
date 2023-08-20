@@ -62,10 +62,15 @@ a tons of basics and advanced methods. I hope, it will be useful...
 #include <time.h>
 
 /* --------------------------------------------------------------- */
-/* --------------------------------------------------------------- */
 /* ------------------------ Helper Methods ----------------------- */
 /* --------------------------------------------------------------- */
-/* --------------------------------------------------------------- */
+
+/* Raise a error message using builtin macro definations. */
+void _raise_error_(char* error, char* file, char *desc, int line) {
+   printf("Error occured in %s::%d: \n", file, line);
+   printf("%s: %s\n", error, desc);
+   exit(EXIT_SUCCESS);
+}
 
 /* Convert given 'matrix' to 'array'. */
 void _to_array_(int row, int col, float matrix[row][col], 
@@ -178,60 +183,72 @@ void _switch_rows_(int row, int col, float matrix[row][col],
    for (int j=0; j<col; j++) matrix[nonzerorow][j] = array1[0][j];
 } 
 
-/* -------------------------------------------------------------- */
-/* -------------------------------------------------------------- */
-/* ----------------------- Basics Methods ----------------------- */
-/* -------------------------------------------------------------- */
-/* -------------------------------------------------------------- */
+/* --------------------------------------------------------------- */
+/* ----------------------- Basics Methods ------------------------ */
+/* --------------------------------------------------------------- */
 
 /* If matrix is square, extract the diagonal of matrix. */
 void diagonal(int row, int col, float matrix[row][col], 
               float result[1][col]) {
+
    // Check if 'matrix' parameter is square or not.
-   if (row != col) { 
-      puts("MatrixError: 'matrix' must be square."); exit(1);
+   if (row != col) 
+      _raise_error_("MatrixError", __FILE__,
+         "'matrix' parameter must be square.", __LINE__ );
+
    // Append the diagonal elements onto 'result' parameter.
-   } else for (int i=0; i<row; i++) result[0][i] = matrix[i][i];
+   else for (int i=0; i<row; i++) result[0][i] = matrix[i][i];
 }
  
 /* Return true, if 'matrix' is homogenous. */
 bool ishomogen(int row, int col, float matrix[row][col]) {
+
    int homogen = 0;
    // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) if (matrix[i][col-1] == 0) homogen ++;
+   for (int i=0; i<row; i++) 
+      if (matrix[i][col-1] == 0) homogen ++;     
    if (homogen == col) return true; else return false;
 }
 
 /* Return true, if 'matrix' contains just 0s. */
 bool iszeros(int row, int col, float matrix[row][col]) {
+
    int zeros = 0;
    // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   if (matrix[i][j] == 0) zeros ++; } }
+   for (int i=0; i<row; i++) 
+      for (int j=0; j<col; j++) 
+         if (matrix[i][j] == 0) zeros ++;
+
    // Determine 'matrix' is the zero matrix.
    if (zeros == row * col) return true; else return false;
 }
 
 /* Return true, if 'matrix' contains just 1s. */
 bool isones(int row, int col, float matrix[row][col]) {
+
    int ones = 0;
    // Iterate the 'matrix'.
    for (int i=0; i<row; i++) 
       for (int j=0; j<col; j++)
          if (matrix[i][j] == 1) ones ++; 
+
    // Determine 'matrix' is the one matrix.
    if (ones == row * col) return true; else return false;
 }
 
 /* Return true, 'matrix' is identity. */
 bool isidentity(int row, int col, float matrix[row][col]) {
+
    int zeros = 0; int ones = 0; float diag[1][col];
    // Get the diagonal matrix.
    diagonal(row, col, matrix, diag);
    // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      if (matrix[i][j] == 0) zeros ++; 
-      if (matrix[i][j] == 1) ones ++; } }
+
+   for (int i=0; i<row; i++) 
+      for (int j=0; j<col; j++) {
+         if (matrix[i][j] == 0) zeros ++; 
+         if (matrix[i][j] == 1) ones ++; 
+      } 
    // Check if 'matrix' is identity or not.
    if (zeros + ones == row * col && \
        isones(1, col, diag) == 1 && \
@@ -241,37 +258,35 @@ bool isidentity(int row, int col, float matrix[row][col]) {
 
 /* Generate new matrix that just contains 0s. */
 void zeros(int row, int col, float result[row][col]) {
-   // New 0s matrix.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = 0; } }
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = 0; 
 }
 
 /* Generate new matrix that just contains 1s. */
 void ones(int row, int col, float result[row][col]) {
-   // New 1s matrix.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = 1; } }
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = 1; 
 }
 
-/* Generate new matrix that is identity. */
+/* Generate new identity matrix. */
 void identity(int row, int col, float result[row][col]) {
-   // New identity matrix.
-   if (row != col) {
-      puts("MatrixError: 'matrix' must be square."); exit(1);
-   } else {
-      // Previously, create the zeros matrix.
-      zeros(row, col, result);
-      // And then, append 1s onto diagonal of 'result'.
-      for (int i=0; i<row; i++) result[i][i] = 1;
-   }
+
+   // Check if the parameters are consistent with other. 
+   if (row != col) 
+      _raise_error_("MatrixError", __FILE__,
+         "Identity matrix must be square.", __LINE__);
+
+   // Previously, create the zeros matrix.
+   zeros(row, col, result);
+   // And then, append 1s onto diagonal of 'result'.
+   for (int i=0; i<row; i++) result[i][i] = 1;
 }
 
 /* Generate new matrix that is arbitrary. */
 void arbitrary(float value, int row, int col, 
                float result[row][col]) {
-   // New arbitrary matrix.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) { 
-   result[i][j] = value; }}
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = value; 
 }
 
 /* Generate the sequential matrix. */
@@ -281,8 +296,9 @@ void sequential(float initial, float end, int row, int col,
    float step; // step interval
    // Determine the step interval for two situations.
    if (end - initial > 0) 
-   step = (float) (end-initial)/(float) (row*col-1);
+      step = (float) (end-initial)/(float) (row*col-1);
    else step = (float) (end-initial) / (float) (row*col-1);
+
    float total = initial;
    // Iterate the 'result' matrix and replace the elements.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
@@ -292,22 +308,51 @@ void sequential(float initial, float end, int row, int col,
 /* Generate the new random positive integer matrix. */
 void randint(int initial, int end, int row, int col, 
              float result[row][col]) {
-   // Raise error, if parameters are inconsistent.
-   if (end < initial) {
-      puts("MatrixError: 'end' must be bigger than 'initial'.");
-      exit(EXIT_FAILURE);
-   }
+
+   // Check if the parameters are consistent with other..
+   if (end < initial) 
+      _raise_error_("MatrixError", __FILE__, 
+      "'end' must be bigger or equal than 'initial'.", __LINE__);
+
    // Previously, adjust seed to random with 'srand' method.
    srand(time(NULL)); float integer;
-   // Iterate the 'result' matrix and put the random integers.
+
+   // There are 3 cases in here according to sings of parameters.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      // According to signs of 'initial' and 'end' parameters, 
-      // can be indicated 4 conditions.
-      while (true) {
-         // Generate the random positive integer.
-         integer = rand() % (end + 1);
-         if (integer >= initial) break;
-      }
+      // First is that both parameters are positives.
+      if (initial >= 0 && end >= 0) {
+         while (true) {
+            // Generate the random positive integer.
+            integer = rand() % (end + 1);
+            if (integer >= initial) break;
+      }}
+      // Second is that 'initial' parameter is negative.
+      else if (initial < 0 && end > 0) {
+         while (true) {
+            // Previously, determine the 'nend' variable.
+            int nend;
+            if (-initial >= end) nend = -initial;
+            else nend = end;
+            // Generate the random positive or negative integer.
+            integer = rand() % nend;
+            // Set the 'integer' to negative if that case is true.
+            if (integer > end) {integer *= -1; break;}
+            else {
+               // The main strategy is to make positive integer if 
+               // 'integer' is even and make negative integer if 
+               // 'integer' is odd.
+               if ((int) integer % 2 == 1 && -integer >= initial) 
+                  {integer *= -1; break;}
+               if ((int) integer % 2 == 0 && integer >= initial) 
+                  break;
+      }}}
+      // Third is that both parameters are negatives.
+      else {
+         while (true) {
+            // Generate the random negative integer.
+            integer = rand() % (-initial + 1);
+            if (integer >= -end) {integer *= -1; break;}
+      }} 
       // Append the random 'integer' into 'result'.
       result[i][j] = integer;
    }}
@@ -316,6 +361,7 @@ void randint(int initial, int end, int row, int col,
 /* Return true, if given two matrix are equals for each other. */
 bool isequal(int row, int col, float matrix1[row][col],  
              float matrix2[row][col]) {
+
    // Count the same elements.
    int equal = 0;
    // Iterate both two the matrices.
@@ -327,34 +373,41 @@ bool isequal(int row, int col, float matrix1[row][col],
 
 /* Return the highest element in matrix. */
 float highest(int row, int col, float matrix[row][col]) {
-   // Highest element.
-   float high = 0;
+
+   float high = 0; // highest element
    // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      if (matrix[i][j] >= high) high = matrix[i][j]; 
-   }}
+   for (int i=0; i<row; i++) 
+      for (int j=0; j<col; j++) 
+         if (matrix[i][j] >= high) 
+            high = matrix[i][j]; 
+   
    return high;
 }
 
 /* Return the lowest element in matrix. */
 float lowest(int row, int col, float matrix[row][col]) {
-   // Lowest element.
-   float low = 0;
+
+   float low = 0; // lowest element 
    // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      if (matrix[i][j] <= low) low = matrix[i][j]; 
-   }}
+   for (int i=0; i<row; i++) 
+      for (int j=0; j<col; j++)
+         if (matrix[i][j] <= low) 
+            low = matrix[i][j]; 
+
    return low; 
 }
 
 /* Aggregate the matrix rows as horizontal.  */
 void agg0(int row, int col, float matrix[row][col], 
           float result[1][col]) {
+
    float total = 0;
    // Iterates the 'matrix'.
-   for (int j=0; j<col; j++) { for (int i=0; i<row; i++) { 
-   // sum each column into 'total'
-   total += matrix[i][j]; } 
+   for (int j=0; j<col; j++) { 
+      for (int i=0; i<row; i++) { 
+         // sum each column into 'total'
+         total += matrix[i][j]; 
+      } 
    // and in each iteration, insert the total into 'result'.
    result[0][j] = total; total = 0; }
 }
@@ -362,11 +415,14 @@ void agg0(int row, int col, float matrix[row][col],
 /* Aggregate the matrix rows as vertical.  */
 void agg1(int row, int col, float matrix[row][col], 
                 float result[row][1]) {
+
    float total = 0;
    // Iterates the 'matrix'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) { 
-   // sum each row into 'total'
-   total += matrix[i][j]; } 
+   for (int i=0; i<row; i++) { 
+      for (int j=0; j<col; j++) { 
+         // sum each row into 'total'
+         total += matrix[i][j]; 
+      } 
    // and in each iteration, insert the total into 'result'.
    result[i][0] = total; total = 0; }
 }
@@ -375,12 +431,14 @@ void agg1(int row, int col, float matrix[row][col],
 void transpose(int row, int col, float matrix[row][col], 
                  float result[col][row]) {
    // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[j][i] = matrix[i][j]; }}
+   for (int i=0; i<row; i++) 
+      for (int j=0; j<col; j++)
+         result[j][i] = matrix[i][j];
 }
 
 /* Return true, if 'matrix' is lower triangular. */
 bool islowertri(int row, int col, float matrix[row][col]) {
+
    // Count the same elements.
    int issame = 0;
    // Append the upper triangular elements.
@@ -400,6 +458,7 @@ bool islowertri(int row, int col, float matrix[row][col]) {
 
 /* Return true, if 'matrix' is upper triangular. */
 bool isuppertri(int row, int col, float matrix[row][col]) {
+
    // Get the transpose of 'matrix'.
    float matrix2[col][row]; 
    transpose(row, col, matrix, matrix2);
@@ -410,6 +469,7 @@ bool isuppertri(int row, int col, float matrix[row][col]) {
 
 /* Return true, if 'matrix' is upper or lower triangular. */
 bool istriangle(int row, int col, float matrix[row][col]) {
+
    // Can be used both 'islowertri' and 'isuppertri' methods.
    if (islowertri(row, col, matrix) || 
       isuppertri(row, col, matrix)) 
@@ -418,48 +478,55 @@ bool istriangle(int row, int col, float matrix[row][col]) {
 
 /* Get mean of 'matrix'. */
 float mean(int row, int col, float matrix[row][col]) {
+
    // Sum the all elements of given 'matrix'.
    float total = 0;
    // Iterate the matrix.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      total += matrix[i][j];
-   }}
+   for (int i=0; i<row; i++) 
+      for (int j=0; j<col; j++) 
+         total += matrix[i][j];
+
    return total / (row * col);
 }
 
-/* Sort the all elements of 'matrix' by ascending or descending. */
+/* Sort the all elements of 'matrix' by ascending or descending. 
+'method' must be 'A' or 'a' for ascending order; 'D' or 'd'
+for descending order. */
 void sort(char method, int row, int col, float matrix[row][col], 
           float result[row][col]) {
+
    int temp = 0;
    // Convert the 'matrix' to 'array'.
    float array[row * col];
    _to_array_(row, col, matrix, array);
+
    // Sort the elementsin the 'array' according to 'method'.
-   for (int i=0; i<row*col; i++) { for (int j=i+1; j<row*col; j++){
-      // Sor the elements in ascending order.
-      if (method == 'A' || method == 'a') { 
-         if (array[i] > array[j]) { temp = array[i]; 
-         array[i] = array[j]; array[j] = temp; }}
-      // Sort the elements in descending order.
-      else if  (method == 'D' || method == 'd') { 
-               if (array[i] < array[j]) { temp = array[i]; 
-               array[i] = array[j]; array[j] = temp; }}
-      // Otherwise return the error.
-      else {
-         char* error1 = "MatrixError: 'method' parameter must be ";
-         char* error2 = "'A', 'a' for ascending order or 'D', 'd'";
-         char* error3 = " for descending order";
-         printf("%s%s%s.\n", error1, error2, error3);
-         exit(EXIT_FAILURE); }}}
+   for (int i=0; i<row*col; i++) 
+      for (int j=i+1; j<row*col; j++){
+         // Sor the elements in ascending order.
+         if (method == 'A' || method == 'a') { 
+            if (array[i] > array[j]) { temp = array[i]; 
+            array[i] = array[j]; array[j] = temp; }}
+         // Sort the elements in descending order.
+         else if (method == 'D' || method == 'd') { 
+            if (array[i] < array[j]) { temp = array[i]; 
+            array[i] = array[j]; array[j] = temp; }}
+         // Otherwise return the error.
+         else {
+            _raise_error_("MatrixError", __FILE__, 
+            "'method' must be 'A', 'a', 'D' or 'd'.", __LINE__);
+   }}
    // Lastly, convert the ordered 'array' to 'matrix'.
    _to_matrix_(row, col, array, result);
 }
  
 /* Calculate the standard deviation of 'matrix'. */
 float stdev(int row, int col, float matrix[row][col]) {
+
    // Calculate the mean.
    float m = mean(row, col, matrix);
    float pows = 0;
+
    // Iterate the 'matrix' elements.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
       // Get the pows of iteration.
@@ -473,10 +540,12 @@ float stdev(int row, int col, float matrix[row][col]) {
 
 /* Find the median of 'matrix'. */
 float median(int row, int col, float matrix[row][col]) {
+
    // Sort the all elements of 'matrix'.
    float sorted[row][col]; sort('a', row, col, matrix, sorted);
    // Convert the 'sorted' into array.
    float array[row * col]; _to_array_(row, col, sorted, array);
+
    // Find the median of 'array'.
    if ((row * col) % 2 == 1) return array[(int) (row * col / 2)];
    else {
@@ -488,12 +557,13 @@ float median(int row, int col, float matrix[row][col]) {
 
 /* Shuffle the 'matrix' elements. */
 void shuffle(int row, int col, float matrix[row][col], 
-         float result[row][col]) {
+             float result[row][col]) {
+
    // Generate the random indexes.
    int array[row * col]; _generate_indexes_(row, col, array);
    // Convert the 'matrix' into array.
    float array2[row * col]; _to_array_(row, col,  matrix, array2);
-   // Iterate the 'matrix'.
+
    int start = 0; // Fill in the 'result' matrix.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = array2[array[start]-1]; start ++; }} 
@@ -502,14 +572,15 @@ void shuffle(int row, int col, float matrix[row][col],
 /* Reshape the 'matrix' elements. */
 void reshape(int row1, int col1, float matrix[row1][col1], 
              int row2, int col2, float result[row2][col2]) {
+
    // Start index for 'result' matrix.
    int start = 0;
    // Check if rows and cols of each two 'matrix1' and 'result'
    // are equals, else return an error message.
-   if (row1 * col1 != row2 * col2) {
-      puts("MatrixError: Found dimension discrepancy.");
-      exit(EXIT_FAILURE);
-   }
+   if (row1 * col1 != row2 * col2) 
+      _raise_error_("MatrixError", __FILE__, 
+                    "Found dimension discrepancy.", __LINE__);
+
    // Convert the 'matrix1' into array.
    float array[row1 * col1]; _to_array_(row1, col1, matrix, array);
    // Iterate the 'result' matrix.
@@ -521,11 +592,12 @@ void reshape(int row1, int col1, float matrix[row1][col1],
 void concat0(int row1, int col1, float matrix1[row1][col1], 
              int row2, int col2, float matrix2[row2][col2], 
              float result[row1 + row2][col1]) {
+
    // Check if given two matrices are proper or not.
-   if (col1 != col2) {
-      puts("MatrixError: Found dimension dicrepancy.");
-      exit(EXIT_FAILURE);
-   }
+   if (col1 != col2) 
+      _raise_error_("MatrixError", __FILE__, 
+                    "Found dimension discrepancy.", __LINE__);
+
    // Iterate the 'matrix1'.
    for (int i=0; i<row1; i++) { for (int j=0; j<col1; j++) {
    result[i][j] = matrix1[i][j]; }}
@@ -538,11 +610,12 @@ void concat0(int row1, int col1, float matrix1[row1][col1],
 void concat1(int row1, int col1, float matrix1[row1][col1], 
              int row2, int col2, float matrix2[row2][col2], 
              float result[row1][col1 + col2]) {
+
    // Check if given two matrices are proper or not.
-   if (row1 != row2) {
-      puts("MatrixError: Found dimension discrepancy.");
-      exit(EXIT_FAILURE);
-   }
+   if (row1 != row2) 
+      _raise_error_("MatrixError", __FILE__, 
+                    "Found dimension discrepancy.", __LINE__);
+
    // Iterate the 'matrix1'.
    for (int i=0; i<row1; i++) { for (int j=0; j<col1; j++) {
    result[i][j] = matrix1[i][j]; }}
@@ -554,6 +627,7 @@ void concat1(int row1, int col1, float matrix1[row1][col1],
 /* Add the 'matrix1' and 'matrix2' elements. */
 void add(int row, int col, float matrix1[row][col], 
          float matrix2[row][col], float result[row][col]) {
+
    // Iterate the 'matrix1' and 'matrix2'.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = matrix1[i][j] + matrix2[i][j]; }}
@@ -562,6 +636,7 @@ void add(int row, int col, float matrix1[row][col],
 /* Subtract the 'matrix1' from 'matrix2' elements. */
 void subtract(int row, int col, float matrix1[row][col], 
               float matrix2[row][col], float result[row][col]) {
+
    // Iterate the 'matrix1' and 'matrix2'.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = matrix1[i][j] - matrix2[i][j]; }}
@@ -570,6 +645,7 @@ void subtract(int row, int col, float matrix1[row][col],
 /* Multiplies 'scaler' and 'matrix' elements. */
 void scaler_mul(float scaler, int row, int col, 
                 float matrix[row][col], float result[row][col]) {
+
    // Iterate the 'matrix'.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = matrix[i][j] * scaler; }}
@@ -579,6 +655,7 @@ void scaler_mul(float scaler, int row, int col,
 /* Multiplies the 'matrix1' and 'matrix2' elements as dot. */
 void dot_mul(int row, int col, float matrix1[row][col], 
              float matrix2[row][col], float result[row][col]) {
+
    // Iterate the 'matrix1' and 'matrix2'.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = matrix1[i][j] * matrix2[i][j]; }}
@@ -593,11 +670,11 @@ void cross_mul(int row1, int col1, float matrix1[row1][col1],
    float total = 0;
    int index = col1;
    // Check if given two matrices are proper or not.
-   if (col1 != row2) {
-      puts("MatrixError: Found dimension discrepancy."); 
-      exit(EXIT_FAILURE);
-   }
+   if (col1 != row2) 
+      _raise_error_("MatrixError", __FILE__, 
+                    "Found dimension discrepancy.", __LINE__);
    // Get transpose of 'matrix2'.
+
    float transposed[col2][row2];
    transpose(row2, col2, matrix2, transposed);
    // Save the results in here.
@@ -622,6 +699,7 @@ void cross_mul(int row1, int col1, float matrix1[row1][col1],
 /* Divides the 'scaler' to 'matrix'. */
 void scaler_div(float scaler, int row, int col, 
                 float matrix[row][col], float result[row][col]) {
+
    // Iterate the 'matrix' elements.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = matrix[i][j] / scaler; }}
@@ -630,26 +708,28 @@ void scaler_div(float scaler, int row, int col,
 /* Divides the 'matrix1' to 'matrix2'. */
 void dot_div(int row, int col, float matrix1[row][col], 
              float matrix2[row][col], float result[row][col]) {
+
    // Iterate the 'matrix' elements.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
    result[i][j] = matrix1[i][j] / matrix2[i][j]; }}
 }
 
-/* -------------------------------------------------------------- */
-/* -------------------------------------------------------------- */
-/* --------------------- Advanced Methods ----------------------- */
-/* -------------------------------------------------------------- */
-/* -------------------------------------------------------------- */
+
+/* --------------------------------------------------------------- */
+/* --------------------- Advanced Methods ------------------------ */
+/* --------------------------------------------------------------- */
 
 /* Calculate the determinant of any square matrix. */
 float det(int row, int col, float matrix[row][col]) {
+
    // Check if 'matrix' is square or not.
-   if (row != col) {
-      puts("MatrixError: 'matrix' must be square.");
-      exit(EXIT_FAILURE);
-   }
+   if (row != col) 
+      _raise_error_("MatrixError", __FILE__, 
+                    "'matrix' must be square.", __LINE__);
+
    // Calculate the determinant of 1x1 matrix.
    if (row == 1) return matrix[0][0];
+
    // Calculate the determinant of 2x2 matrix.
    if (row == 2) {
       // Multiply the diagonals and get the difference.
@@ -657,6 +737,7 @@ float det(int row, int col, float matrix[row][col]) {
       float s2 = matrix[0][1] * matrix[1][0];
       return s1 - s2;
    }
+
    // Calculate the determinant of 3x3 and more matrix.
    if (row >= 3) {
       // The main strategy is that 'matrix' will be converted
@@ -717,11 +798,12 @@ float det(int row, int col, float matrix[row][col]) {
 /* Extract the minors map of 'matrix'. */
 void minors(int row, int col, float matrix[row][col], 
             float result[row][col]) {
+
    // Check if given 'matrix' is proper for this method.
-   if (col == 1 || row == 1) {
-      puts("MatrixError: 1x1 matrix is unexceptable.");
-      exit(EXIT_FAILURE);
-   }
+   if (col == 1 || row == 1) 
+      _raise_error_("MatrixError", __FILE__,
+                    "1x1 matrix is not acceptable.", __LINE__);
+
    // Iterate the 'matrix' elements.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
       // Copy the 'matrix' in here. 
@@ -741,21 +823,22 @@ void minors(int row, int col, float matrix[row][col],
       transpose(col-1, row-1, parsed2, transposed2);
       // Calculate the determinant of reduced 'matrix' and 
       // then replace it into 'result' matrix.
-      result[i][j] = det(row-1, col-1, transposed2); }}
+      result[i][j] = det(row-1, col-1, transposed2); 
+   }}
 }
 
 /* Extract the cofactors map of 'matrix'. */
 void cofactors(int row, int col, float matrix[row][col], 
                float result[row][col]) {
+
    // Check if given 'matrix' is proper for this method.
-   if (col == 1 || row == 1) {
-      puts("MatrixError: 2x2 matrix is unexceptable.");
-      exit(EXIT_FAILURE);
-   }
+   if (col == 1 || row == 1) 
+      _raise_error_("MatrixError", __FILE__,
+                    "2x2 matrix is not acceptable.", __LINE__);
+
    // Extract the minors map of 'matrix'.
    minors(row, col, matrix, result);
-   // Multiply the element which is the odd of 
-   // sum of indexes by -1.
+   // Multiply the elements that is odd of sum of indexes by -1.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
       if ((i+j)%2 == 1 && result[i][j] != 0.0)            
          result[i][j] = -1 * result[i][j];                
@@ -764,6 +847,7 @@ void cofactors(int row, int col, float matrix[row][col],
 
 /* Return true, if 'matrix' is invertible. */
 bool isinvertible(int row, int col, float matrix[row][col]) {
+
    // Calculate the determinant of 'matrix'.
    float determinant = det(row, col, matrix);
    if (determinant != 0) return true; else return false;
@@ -772,6 +856,7 @@ bool isinvertible(int row, int col, float matrix[row][col]) {
 /* Calculate the adjoint of 'matrix'.*/
 void adjoint(int row, int col, float matrix[row][col], 
             float result[row][col]) {
+
    // Extract the cofactors map into 'cofactor'.
    float cofactor[row][col]; 
    cofactors(row, col, matrix, cofactor);
@@ -782,11 +867,12 @@ void adjoint(int row, int col, float matrix[row][col],
 /* Calculate the inverse of 'matrix'. */
 void inverse(int row, int col, float matrix[row][col], 
              float result[row][col]) {
+
    // Check if 'matrix' is invertible or not.
-   if (isinvertible(row, col, matrix) == false) {
-      puts("MatrixError: 'matrix' is not invertible.");
-      exit(EXIT_FAILURE);
-   }
+   if (isinvertible(row, col, matrix) == false) 
+      _raise_error_("MatrixError", __FILE__, 
+                    "'matrix' must be invertible.", __LINE__);
+
    // Calculate the determinant of 'matrix'.
    float determinant = det(row, col, matrix);
    // Extract the adjoint of 'matrix'.
@@ -798,11 +884,12 @@ void inverse(int row, int col, float matrix[row][col],
 /* Divide the 'matrix1' to 'matrix2' as cross */
 void cross_div(int row, int col, float matrix1[row][col], 
                float matrix2[row][col], float result[row][col]){
+
    // Check if 'matrix2' is invertible or not.
-   if (isinvertible(row, col, matrix2) == false) {
-      puts("MatrixError: 'matrix2' is invertible.");
-      exit(EXIT_FAILURE);
-   }
+   if (isinvertible(row, col, matrix2) == false) 
+      _raise_error_("MatrixError", __FILE__,
+                   "Both matrices must be invertible.", __LINE__);
+
    // Get inverse of 'matrix2'.
    float inv[row][col]; inverse(row, col, matrix2, inv);
    // Multiply the 'matrix1' and 'inv' as cross.
@@ -812,11 +899,12 @@ void cross_div(int row, int col, float matrix1[row][col],
 /* Solve a augmented matrix. */
 void solve(int row, int col, float matrix[row][col], 
            float result[row][1]) {
+
    // Check if 'matrix' is proper form for solving equations.
-   if (col - row != 1) {
-      puts("MatrixError: 'matrix' must have augmented form.");
-      exit(EXIT_FAILURE);
-   }
+   if (col - row != 1) 
+      _raise_error_("MatrixError", __FILE__,
+                    "'matrix' must have augmented form.", __LINE__);
+
    // Extract the main square and target matrices.
    float smatrix[row][col-1]; 
    float target[row][1];
@@ -824,14 +912,14 @@ void solve(int row, int col, float matrix[row][col],
    for (int i=0; i<row; i++) for (int j=0; j<col-1; j++) 
       smatrix[i][j] = matrix[i][j]; 
    for (int i=0; i<row; i++) target[i][0] = matrix[i][col-1];
+
    // Check if the 'smatrix' is invertible or not.
-   if (isinvertible(row, col-1, smatrix) == false) {
-      puts("MatrixError: 'smatrix' is not invertible.");
-      exit(EXIT_FAILURE);
-   }
+   if (isinvertible(row, col-1, smatrix) == false) 
+      _raise_error_("MatrixError", __FILE__,
+                    "'smatrix' must be invertible.", __LINE__);
+
    // Get inverse or 'smatrix'.
    float inv[row][col-1]; inverse(row, col-1, smatrix, inv);
    // Multiply the 'inv' and 'target' matrices as cross.
    cross_mul(row, col-1, inv, row, 1, target, result);
 }
-

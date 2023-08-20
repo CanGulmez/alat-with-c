@@ -25,8 +25,24 @@ source file. I hope, it will be useful...
 #include <string.h>
 #include <math.h>
 
+/* --------------------------------------------------------------- */
+/* ------------------------ Helper Methods ----------------------- */
+/* --------------------------------------------------------------- */
+
+/* Raise a error message using builtin macro definations. */
+void _raise_error_(char* error, char* file, char *desc, int line) {
+   printf("Error occured in %s::%d: \n", file, line);
+   printf("%s: %s\n", error, desc);
+   exit(EXIT_SUCCESS);
+}
+
+/* --------------------------------------------------------------- */
+/* ----------------------- Basics Methods ------------------------ */
+/* --------------------------------------------------------------- */
+
 /* Calculate the lenght of any vector. */
 float lenght(int dim, float vector[dim]) {
+
    float pow = 0; // firstly, get the pow of all points
    for (int i=0; i<dim; i++) pow += vector[i] * vector[i];
    return sqrt(pow); // Ana then, get squares and return result
@@ -34,6 +50,7 @@ float lenght(int dim, float vector[dim]) {
 
 /* Check if given two vectors are equal or not. */
 bool isequal(int dim, float vector1[dim], float vector2[dim]) {
+
    int notsame = 0; // count the non-same points
    // Iterate the 'vector1' and 'vector2'.
    for (int i=0; i<dim; i++) 
@@ -43,6 +60,7 @@ bool isequal(int dim, float vector1[dim], float vector2[dim]) {
 
 /* Check if given two vector is zero vector or not. */
 bool iszero(int dim, float vector[dim]) {
+
    int zero = 0; // count the zero points
    for (int i=0; i<dim; i++) // iterate the 'vector' points
    if (vector[i] == 0) zero ++; // indicate if point is zero
@@ -51,11 +69,14 @@ bool iszero(int dim, float vector[dim]) {
 
 /* Finds unit vector of any vector. */
 void unit(int dim, float vector[dim], float result[dim]) {
-   float len = lenght(dim, vector); // get the lenght of 'vector'
-   if (len == 0) { // check if lenght of 'vector' is zero
-      puts("VectorError: Lenght of 'vector' is zero.");
-      exit(EXIT_FAILURE);
-   }
+
+   // Calculate the lenght of the 'vector'.
+   float len = lenght(dim, vector); 
+   // Check if the lenght of 'vector' is acceptable.
+   if (len == 0) 
+      _raise_error_("VectorError", __FILE__, 
+                  "Lenght of 'vector' must not be zero.", __LINE__);
+               
    for (int i=0; i<dim; i++) // iterate the 'vector' points
    result[i] = vector[i] * (1/len); 
 }
@@ -76,6 +97,7 @@ void scaler_mul(float scaler, int dim, float vector[dim],
 
 /* Measures the distance between 'vector1' and 'vector2'. */
 float distance(int dim, float vector1[dim], float vector2[dim]) {
+
    float distances = 0; // distances between point of vectors
    for (int i=0; i<dim; i++) { // iterate the vectors
       float distance = vector1[i] - vector2[i]; // get distance
@@ -86,6 +108,7 @@ float distance(int dim, float vector1[dim], float vector2[dim]) {
 
 /* Multiplies the 'vector1' and 'vector2' onto 'result' as dot. */
 float dot_mul(int dim, float vector1[dim], float vector2[dim]) {
+
    float dot = 0; // dot multiplications
    for (int i=0; i<dim; i++) // iterate the 'vector1' and 'vector2'
    dot += vector1[i] * vector2[i]; // collect multiplied points 
@@ -94,6 +117,7 @@ float dot_mul(int dim, float vector1[dim], float vector2[dim]) {
 
 /* Return true, if there is Cauchy-Schwarz inequality. */
 bool iscs(int dim, float vector1[dim], float vector2[dim]) {
+
    // Multiply 'vector1' and 'vector2' as dot.
    float mul1 = dot_mul(dim, vector1, vector2); 
    if (mul1 < 0) mul1 = -1 * mul1; // get absolute value of 'mul'
@@ -106,6 +130,7 @@ bool iscs(int dim, float vector1[dim], float vector2[dim]) {
 
 /* Return true, if there is triangular inequality. */
 bool istriangle(int dim, float vector1[dim], float vector2[dim]) {
+
    // Collect the 'vector1' and 'vector2' onto 'result'.
    float result[dim]; add(dim, vector1, vector2, result);
    float len1 = lenght(dim, result); // lenght of 'result' 
@@ -116,6 +141,7 @@ bool istriangle(int dim, float vector1[dim], float vector2[dim]) {
 
 /* Return true, if there is pythagorean inequality. */
 bool ispythag(int dim, float vector1[dim], float vector2[dim]) {
+
    // Collect the 'vector1' and 'vector2' onto 'result'.
    float result[dim]; add(dim, vector1, vector2, result);
    float len1 = lenght(dim, result); // lenght of 'result' 
@@ -129,32 +155,36 @@ bool ispythag(int dim, float vector1[dim], float vector2[dim]) {
 argument accept 'decimal', 'radians', 'degrees'. */
 float angle(char* method, int dim, float vector1[dim], 
             float vector2[dim]) {
+
    // Any vector must not be zero vector.
-   if (iszero(dim, vector1) || iszero(dim, vector2)) {
-      puts("VectorError: Vector/s must not be zero vectors.");
-      exit(EXIT_FAILURE);
-   }
+   if (iszero(dim, vector1) || iszero(dim, vector2)) 
+      _raise_error_("VectorError", __FILE__, 
+                    "Vector/s must not be zero.", __LINE__);
+
    // Multiply 'vector1' and 'vector2' as dot.
    float mul = dot_mul(dim, vector1, vector2);
    float pow1 = 0; float pow2 = 0;
+
    // Iterate the 'vector1' and 'vector2' points.
    for (int i=0; i<dim; i++) pow1 += pow(vector1[i], 2);
    for (int i=0; i<dim; i++) pow2 += pow(vector2[i], 2);
+
    // Calculate the angle between vectors.
    float angle = mul / (sqrt(pow1) * sqrt(pow2));
+
    // Return the angle in appropriate form according to 'method'.
    if (strcmp(method, "decimal") == 0) return angle;
    else if (strcmp(method, "radians") == 0) return acos(angle);
    else if (strcmp(method, "degrees") == 0) {
       float degrees = 57.2957795 * acos(angle); return degrees;
-   } else { 
-      puts("VectorError: Inconsistent 'method' parameter.");
-      exit(EXIT_FAILURE);
-   }
+   } 
+   else _raise_error_("VectorError", __FILE__, 
+   "'method' must be 'decimal', 'radians' or 'degrees'.", __LINE__);
 }
 
 /* Return true, if the 'vector1' and 'vector2' are steeps. */ 
 bool issteep(int dim, float vector1[dim], float vector2[dim]) {
+
    // Can be used 'angle' method for this problem.
    float degrees = angle("degrees", dim, vector1, vector2);
    if (degrees == 90.0) return true; else return false;
@@ -162,8 +192,8 @@ bool issteep(int dim, float vector1[dim], float vector2[dim]) {
 
 /* Return true, if the 'vector1' and 'vector2' are parallel. */ 
 bool isparallel(int dim, float vector1[dim], float vector2[dim]) {
+
    // Can be used 'angle' method for this problem.
    float degrees = angle("degrees", dim, vector1, vector2);
    if (degrees == 180.0) return true; else return false;
 }
-
