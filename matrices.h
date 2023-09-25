@@ -1,63 +1,23 @@
 /* Matrix operations in ALAT (Advanced Linear Algebra Toolkit) 
 
-Matrix is defined as the 2D arrays. Especially, in engineering and
-math, so many problems requires working with matrix operations and 
-rules. But matrix operations can be so ashausting and complex 
-manually. So I've decided to write this source file which contains
-a tons of basics and advanced methods. I hope, it will be useful...
-
 + Basics Methods:
-   - diagonal()
-   - ishomogen()
-   - iszeros()
-   - isones()
-   - isidentity()
-   - zeros()
-   - ones()
-   - identity()
-   - arbitrary()
-   - sequential()
-   - randint()
-   - isequal()
-   - highest()
-   - lowest()
-   - agg0()
-   - agg1()
-   - transpose()
-   - islowertri()
-   - isuppertri()
-   - istriangle()
-   - mean()
-   - sort()
-   - stdev()
-   - mode()
-   - median()
-   - shuffle()
-   - reshape()
-   - concat0()
-   - concat1()
-   - add()
-   - subtract()
-   - scaler_mul()
-   - dot_mul()
-   - cross_mul()
-   - scaler_div()
+   diagonal(), ishomogen(), iszeros(), isones(), isidentity(), 
+   zeros(), ones(), identity(), arbitrary() sequential(), 
+   randouble(), isequal(), highest(), lowest(), agg_hor()
+   agg_ver(), transpose(), islowertri(), isuppertri()
+   istriangle(), mean(), sort_asc(), sort_des(), stddev(), 
+   mode(), median(), shuffle(), reshape(), concat_hor()
+   concat_ver(), add(), subtract(), scaler_mul(), dot_mul()
+   cross_mul(), scaler_div()
 
 + Advanced Method:
-   - det()
-   - minors()
-   - cofactors()
-   - isinvertable()
-   - adjoint()
-   - inverse()
-   - cross_div()
-   - solve()  
+   det(), minors(), cofactors(), isinvertable(), adjoint()
+   inverse(), solve()  
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+/* Libraries */
 #include <stdbool.h>
-#include <string.h>
+#include <assert.h>
 #include <math.h>
 #include <time.h>
 
@@ -65,116 +25,57 @@ a tons of basics and advanced methods. I hope, it will be useful...
 /* ------------------------ Helper Methods ----------------------- */
 /* --------------------------------------------------------------- */
 
-/* Raise a error message using builtin macro definations. */
-void _raise_error_(char* error, char* file, char *desc, int line) {
-   printf("Error occured in %s::%d: \n", file, line);
-   printf("%s: %s\n", error, desc);
-   exit(EXIT_SUCCESS);
+/* Convert 2D 'matrix' to 1D 'result'. */
+void _to_array_(int row, int col, double matrix[row][col], 
+                double array[row * col]) {
+   // Append the all elements of 'matrix' into 'result'.
+   int index = 0;
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      array[index] = matrix[i][j], index ++; 
 }
 
-/* Convert given 'matrix' to 'array'. */
-void _to_array_(int row, int col, float matrix[row][col], 
-                float array[row * col]) {
-   int index = 0; // array index
-   // Iterates the 'matrix'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   array[index] = matrix[i][j]; index ++; }}
+/* Convert 1D 'array' to 2D 'result'. */
+void _to_matrix_(int row, int col, double array[row * col], 
+                 double matrix[row][col]) {
+   // Put the all elements of 'array' into 'result'.
+   int index = 0;
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      matrix[i][j] = array[index], index ++;
 }
 
-/* Convert given 'array' to 'matrix'. */
-void _to_matrix_(int row, int col, float array[row * col], 
-                 float matrix[row][col]) {
-   int index = 0; // array index
-   // Iterates the 'matrix'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   matrix[i][j] = array[index]; index ++; }}
+/* Copy the elements of 'matrix' to 'result'. */
+void _copy_matrix_(int row, int col, double matrix[row][col],
+                   double result[row][col]) {
+   // Copy the elements of 'matrix'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = matrix[i][j];
 }
 
-/* Return True, if 'item' is in 'string'. */
-bool _is_in_(char item, char *string) {
-   int in = 0; // if 'item' is in 'string', increase it
-   int len = strlen(string); // get length of 'string'
-   // Iterate the 'string' chars.
-   for (int i=0; i<len; i++) if (string[i] == item) in ++;
-   if (in != 0) return true; else return false;
-}
-
-/* Get index of 'item' in related 'string'. */
-int _get_index_(char item, char *string) {
-   int index = 0; 
-   int len = strlen(string); // lenght of 'string'
-   for (int i=0; i<len; i++) // iterate the 'string' chars
-   { if (item == string[i]) break; index ++; }
-   return index;
-}
-
-/* Determine if a item is in 'array' or not. */
-bool _is_exist_(int item, int lenght, int array[lenght]) {
-   // Find existing item.
-   int exists = 0;
-   // Iterate the 'array'.
-   for (int i=0; i<lenght; i++) if (array[i] == item) exists ++;
-   if (exists != 0) return true;
-   else return false;
-}
-
-/* Determine if a item is in 'array' or not. */
-bool _is_exist_f_(float item, int lenght, float array[lenght]) {
-   // Find existing item.
-   int exists = 0;
-   // Iterate the 'array'.
-   for (int i=0; i<lenght; i++) if (array[i] == item) exists ++;
-   if (exists != 0) return true;
-   else return false;
-}
-
-/* Generate the random indexes. */
-void _generate_indexes_(int row, int col, int array[row*col]) {
-   // Adjust time seed.
-   time_t unique = time(NULL); srand(unique);
-   int start = 0;
-   // Generate the index.
-   while (true) {
-      int index = rand() % (row * col) + 1;
-      // Use '_is_exist_' method.
-      if (!_is_exist_(index, row*col, array)) {
-         // Append unique index onto 'array'.
-         array[start] = index; start ++;
-      }
-      // Break up the loop. 
-      if (start == row*col) break;
-   }
-}
-
-/* Copy the 'matrix' into different matrix. */
-void _copy_matrix_(int row, int col, float matrix[row][col], 
-                    float result[row][col]) {
-   // Iterate the 'matrix' and copy the elements into 'result'.
-   for (int i=0; i<row; i++) {for (int j=0; j<col; j++) {
-   result[i][j] = matrix[i][j]; }}
-}
-
-/* Delete the row of any matrix. */
-void _del_row_(int index, int row, int col, float matrix[row][col],
-               float result[row-1][col]) {
+/* Delete the row of 'matrix'. */
+void _del_row_(int index, int row, int col, double matrix[row][col],
+               double result[row-1][col]) {
    int start = 0;
    // Iterate the 'matrix' until it will reach 'index'.
-   for (int i=0; i<index; i++) { for (int j=0; j<col; j++) {
-   result[start][j] = matrix[i][j]; } start ++; }
+   for (int i=0; i<index; i++) {
+      for (int j=0; j<col; j++) 
+         result[start][j] = matrix[i][j];  
+      start ++; }
    // Iterate the 'matrix' from 'index' to 'row'.
-   for (int i=index+1; i<row; i++) { for (int j=0; j<col; j++) {
-   result[start][j] = matrix[i][j]; } start ++; }
+   for (int i=index+1; i<row; i++) {
+      for (int j=0; j<col; j++)
+         result[start][j] = matrix[i][j];  
+      start ++; }
 }
 
 /* Switch the two rows for vanishing zero element/s. */
-void _switch_rows_(int row, int col, float matrix[row][col], 
+void _switch_rows_(int row, int col, double matrix[row][col], 
                    int index) {
    // Find the proper row that will be switched with 'index'.
    int nonzerorow; 
    for (int i=0+index; i<col; i++) if (matrix[i][index] != 0.0)
          { nonzerorow = i; break; }
    // Create the arrays which contain 'index' and 'nonzerorow'.
-   float array1[1][col]; float array2[1][col];
+   double array1[1][col]; double array2[1][col];
    // Fill the arrays with the proper rows of 'matrix'.
    for (int j=0; j<col; j++) array1[0][j] = matrix[index][j];
    for (int j=0; j<col; j++) array2[0][j] = matrix[nonzerorow][j];
@@ -187,135 +88,215 @@ void _switch_rows_(int row, int col, float matrix[row][col],
 /* ----------------------- Basics Methods ------------------------ */
 /* --------------------------------------------------------------- */
 
-/* If matrix is square, extract the diagonal of matrix. */
-void diagonal(int row, int col, float matrix[row][col], 
-              float result[1][col]) {
+/* If 'matrix' is square then extract the diagonal matrix from 
+it, otherwise raise error. For example:
 
-   // Check if 'matrix' parameter is square or not.
-   if (row != col) 
-      _raise_error_("MatrixError", __FILE__,
-         "'matrix' parameter must be square.", __LINE__ );
+double matrix[2][2] = {
+   {7, 0}, 
+   {6, -4},
+};
+double result[1][2];
+diagonal(2, 2, matrix, result);
+display_matrix(1, 2, result);
 
-   // Append the diagonal elements onto 'result' parameter.
-   else for (int i=0; i<row; i++) result[0][i] = matrix[i][i];
+7.000000 -4.000000
+*/
+void diagonal(int row, int col, double matrix[row][col], 
+              double result[1][col]) {
+   // Check if 'matrix' is suqare or not. If it is, raise error.
+   assert (row == col);
+   // Extract the diagonal matrix of 'matrix'.
+   for (int i=0; i<row; i++) result[0][i] = matrix[i][i];
 }
+
+/* Return true, if 'matrix' is homogen, otherwise return false. 
+Homogen matrix means that the last column of 'matrix' contains
+just zeros. For example:
+
+double matrix[2][2] = {
+   {7, 0}, 
+   {-3, 0},
+};
+int result = ishomogen(2, 2, matrix);
+printf("%d\n", result);
+1 
+*/
+bool ishomogen(int row, int col, double matrix[row][col]) {
+   // Check the last element of each columns of 'matrix'.
+   for (int i=0; i<row; i++) if (matrix[i][col-1] != 0) 
+      return false;
+
+   return true;
+}
+
+/* Return true, if 'matrix' contains just 0s, otherwise return 
+false. For example:
  
-/* Return true, if 'matrix' is homogenous. */
-bool ishomogen(int row, int col, float matrix[row][col]) {
-
-   int homogen = 0;
-   // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) 
-      if (matrix[i][col-1] == 0) homogen ++;     
-   if (homogen == col) return true; else return false;
-}
-
-/* Return true, if 'matrix' contains just 0s. */
-bool iszeros(int row, int col, float matrix[row][col]) {
-
-   int zeros = 0;
-   // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) 
-      for (int j=0; j<col; j++) 
-         if (matrix[i][j] == 0) zeros ++;
-
-   // Determine 'matrix' is the zero matrix.
-   if (zeros == row * col) return true; else return false;
-}
-
-/* Return true, if 'matrix' contains just 1s. */
-bool isones(int row, int col, float matrix[row][col]) {
-
-   int ones = 0;
-   // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) 
+double matrix[2][3] = {
+   {0, 0, 0}, 
+   {0, 0, 0},
+};
+int result = iszeros(2, 3, matrix);
+printf("%d\n", result);
+1
+*/
+bool iszeros(int row, int col, double matrix[row][col]) {
+   // Check the all elements of the 'matrix'.
+   for (int i=0; i<row; i++)
       for (int j=0; j<col; j++)
-         if (matrix[i][j] == 1) ones ++; 
+         if (matrix[i][j] != 0) return false;
 
-   // Determine 'matrix' is the one matrix.
-   if (ones == row * col) return true; else return false;
+   return true;
 }
 
-/* Return true, 'matrix' is identity. */
-bool isidentity(int row, int col, float matrix[row][col]) {
+/* Return true, if 'matrix' contains just 1s, otherwise 
+return false. For example:
+ 
+double matrix[2][3] = {
+   {1, 1, 1}, 
+   {1, 1, 1},
+};
+int result = isones(2, 3, matrix);
+printf("%d\n", result);
+1
+*/
+bool isones(int row, int col, double matrix[row][col]) {
+   // Check the all elements of the 'matrix'.
+   for (int i=0; i<row; i++)
+      for (int j=0; j<col; j++)
+         if (matrix[i][j] != 1) return false;
 
-   int zeros = 0; int ones = 0; float diag[1][col];
-   // Get the diagonal matrix.
-   diagonal(row, col, matrix, diag);
-   // Iterate the 'matrix' elements.
-
-   for (int i=0; i<row; i++) 
-      for (int j=0; j<col; j++) {
-         if (matrix[i][j] == 0) zeros ++; 
-         if (matrix[i][j] == 1) ones ++; 
-      } 
-   // Check if 'matrix' is identity or not.
-   if (zeros + ones == row * col && \
-       isones(1, col, diag) == 1 && \
-       ones == col) return true;
-   else return false; 
+   return true;
 }
 
-/* Generate new matrix that just contains 0s. */
-void zeros(int row, int col, float result[row][col]) {
+/* Return true, if 'matrix' is identity, otherwise return 
+false. For example:
+ 
+double matrix[3][3] = {
+   {1, 0, 0}, 
+   {0, 1, 0}, 
+   {0, 0, 1},
+};
+int result = isindetity(3, 3, matrix);
+printf("%d\n", result);
+1
+*/
+bool isidentity(int row, int col, double matrix[row][col]) {
+   // Check the all elements of the 'matrix'.
    for (int i=0; i<row; i++) for (int j=0; j<col; j++)
-      result[i][j] = 0; 
+      if ((i == j && matrix[i][j] != 1) || // check the diagonal,
+          (i != j) && matrix[i][j] != 0)  // check the rest.
+            return false;
+   return true;
 }
 
-/* Generate new matrix that just contains 1s. */
-void ones(int row, int col, float result[row][col]) {
-   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
-      result[i][j] = 1; 
+/* Generate the new zeros matrix. For example:
+
+double result[2][4];
+zeros(2, 4, result);
+display_matrix(2, 4, result);
+
+0.000000 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000
+*/
+void zeros(int row, int col, double result[row][col]) {
+   // Fill the blank spaces with zeros.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = 0.0;
 }
 
-/* Generate new identity matrix. */
-void identity(int row, int col, float result[row][col]) {
+/* Generate the new ones matrix. For example:
 
-   // Check if the parameters are consistent with other. 
-   if (row != col) 
-      _raise_error_("MatrixError", __FILE__,
-         "Identity matrix must be square.", __LINE__);
+double result[2][4];
+ones(2, 4, result);
+display_matrix(2, 4, result);
 
-   // Previously, create the zeros matrix.
+1.000000 1.000000 1.000000 1.000000
+1.000000 1.000000 1.000000 1.000000
+*/
+void ones(int row, int col, double result[row][col]) {
+   // Fill the blank spaces with ones.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = 1.0;
+}
+
+/* Generate the new identity matrix. For example:
+
+double result[3][3];
+identity(3, 3, result);
+display_matrix(1, 3, result);
+
+1.000000 0.000000 0.000000
+0.000000 1.000000 0.000000 
+0.000000 0.000000 1.000000
+*/
+void identity(int row, int col, double result[row][col]) {
+   // Check if the 'row' and 'col' are same or not.
+   assert(row == col);
+   // Fill the main diagonal with ones, and the rest with zeros.
    zeros(row, col, result);
-   // And then, append 1s onto diagonal of 'result'.
-   for (int i=0; i<row; i++) result[i][i] = 1;
+   for (int i=0; i<row; i++) result[i][i] = 1.0;
 }
 
-/* Generate new matrix that is arbitrary. */
-void arbitrary(float value, int row, int col, 
-               float result[row][col]) {
-   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
-      result[i][j] = value; 
+/* Generate the new arbitrary matrix. Elements of arbitrary 
+matrix are 'value'. For example:
+
+double result[2][3];
+arbitrary(4, 2, 3, result);
+display_matrix(2, 3, result);
+
+4.000000 4.000000 4.000000
+4.000000 4.000000 4.000000 
+*/
+void arbitrary(double value,  int row, int col, 
+               double result[row][col]) {
+   // Fill the blank spaces with 'value'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = value;
 }
 
-/* Generate the sequential matrix. */
-void sequential(float initial, float end, int row, int col, 
-                float result[row][col]) {
+/* Generate the new sequential matrix. Elements of sequential
+matrix are between 'initial' and 'end'. For example:
 
-   float step; // step interval
-   // Determine the step interval for two situations.
+double matrix[3][5];
+sequential(1, 15, 3, 5, matrix);
+display_matrix(3, 5, matrix);
+
+1.000000 2.000000 3.000000 4.000000 5.000000 
+6.000000 7.000000 8.000000 9.000000 10.000000 
+11.000000 12.000000 13.000000 14.000000 15.000000
+*/
+void sequential(int initial, int end, int row, int col, 
+                double result[row][col]) {
+   // Indicate the step interval.
+   double step; 
+   // Find the step interval for each two situations.
    if (end - initial > 0) 
-      step = (float) (end-initial)/(float) (row*col-1);
-   else step = (float) (end-initial) / (float) (row*col-1);
+      step = (double) (end-initial) / (double) (row*col-1);
+   else step = (double) (end-initial) / (double) (row*col-1);
 
-   float total = initial;
-   // Iterate the 'result' matrix and replace the elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = total; total += step; }}
+   double total = initial;
+   // Fill the 'matrix' with sequential numbers.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = total, total += step; 
 }
 
-/* Generate the new random positive integer matrix. */
-void randint(int initial, int end, int row, int col, 
-             float result[row][col]) {
+/* Generate the new random double matrix. Elements of random
+double matrix are between 'initial' and 'end'. For example:
 
-   // Check if the parameters are consistent with other..
-   if (end < initial) 
-      _raise_error_("MatrixError", __FILE__, 
-      "'end' must be bigger or equal than 'initial'.", __LINE__);
+double matrix[2][5];
+randouble(-10, 10, 2, 5, matrix);
+display_matrix(2, 5, matrix);
 
-   // Previously, adjust seed to random with 'srand' method.
-   srand(time(NULL)); float integer;
+6.000000 8.000000 -7.000000 4.000000 -7.000000 
+-5.000000 -3.000000 6.000000 -3.000000 -1.000000 
+*/
+void randouble(int initial, int end, int row, int col, 
+               double result[row][col]) {
+   // Check the 'end' is bigger or equal to 'initial'.
+   assert(end >= initial);
+   // Change the seed continualy for generating different integer.
+   srand(time(NULL)); double integer;
 
    // There are 3 cases in here according to sings of parameters.
    for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
@@ -358,196 +339,345 @@ void randint(int initial, int end, int row, int col,
    }}
 }
 
-/* Return true, if given two matrix are equals for each other. */
-bool isequal(int row, int col, float matrix1[row][col],  
-             float matrix2[row][col]) {
+/* Return true, if the 'matrix1' and 'matrix2' are same, 
+otherwise return false. For example:
 
-   // Count the same elements.
-   int equal = 0;
-   // Iterate both two the matrices.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) { 
-   if (matrix1[i][j] == matrix2[i][j]) equal ++; }}
-   // Check if given two matrix are equals or not.
-   if (equal == row * col) return true; else return false;
+double matrix1[2][2] = { 
+   {7, 4}, 
+   {0, 1}, 
+};
+double matrix2[2][2] = { 
+   {7, 4}, 
+   {0, 1},
+};
+int result = isequal(2, 2, matrix1, matrix2);
+printf("%d\n", result);
+1
+*/
+bool isequal(int row, int col, double matrix1[row][col], 
+             double matrix2[row][col]) {
+   // Check the elements of 'matrix1' and 'matrix2'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      if (matrix1[i][j] != matrix2[i][j]) 
+         return false; 
+
+   return true;
 }
 
-/* Return the highest element in matrix. */
-float highest(int row, int col, float matrix[row][col]) {
+/* Find the highest element in the 'matrix'. For example:
 
-   float high = 0; // highest element
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) 
-      for (int j=0; j<col; j++) 
-         if (matrix[i][j] >= high) 
-            high = matrix[i][j]; 
-   
+double matrix[3][2] = {
+   {1, 7}, 
+   {0, -2}, 
+   {-4, -2},
+}
+double result = highest(3, 2, matrix);
+prinf("%f\n", result);
+
+7.000000
+*/
+double highest(int row, int col, double matrix[row][col]) {
+   // Assign the first element of 'matrix' as default.
+   double high = matrix[0][0];
+   // And then find the highest value.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      if (matrix[i][j] > high) high = matrix[i][j]; 
+
    return high;
 }
 
-/* Return the lowest element in matrix. */
-float lowest(int row, int col, float matrix[row][col]) {
+/* Find the lowest element in the 'matrix'. For example:
 
-   float low = 0; // lowest element 
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) 
-      for (int j=0; j<col; j++)
-         if (matrix[i][j] <= low) 
-            low = matrix[i][j]; 
+double matrix[3][2] = {
+   {1, 7}, 
+   {0, -2}, 
+   {-4, -2},
+}
+double result = lowest(3, 2, matrix);
+prinf("%f\n", result);
 
-   return low; 
+-4.000000
+*/
+double lowest(int row, int col, double matrix[row][col]) {
+   // Assign the first element of 'matrix' as default.
+   double low = matrix[0][0];
+   // And then find the lowest value.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      if (matrix[i][j] < low) low = matrix[i][j]; 
+
+   return low;
 }
 
-/* Aggregate the matrix rows as horizontal.  */
-void agg0(int row, int col, float matrix[row][col], 
-          float result[1][col]) {
+/* Aggregate the rows of 'matrix' as horizontal. For example: 
 
-   float total = 0;
-   // Iterates the 'matrix'.
-   for (int j=0; j<col; j++) { 
-      for (int i=0; i<row; i++) { 
-         // sum each column into 'total'
-         total += matrix[i][j]; 
-      } 
-   // and in each iteration, insert the total into 'result'.
-   result[0][j] = total; total = 0; }
+double matrix[2][3] = {
+   {7, 5, -5}, 
+   {7, -1, 3},
+};
+double result[1][3];
+agg_hor(2, 3, matrix, result);
+display_matrix(1, 3, result);
+
+14.000000 4.000000 -2.000000
+*/
+void agg_hor(int row, int col, double matrix[row][col],
+             double result[1][col]) {
+   // The total value of the rows of 'matrix'.
+   double total = 0.0;
+   int index = 0;
+   // Aggregate the rows of 'matrix'.
 }
 
-/* Aggregate the matrix rows as vertical.  */
-void agg1(int row, int col, float matrix[row][col], 
-                float result[row][1]) {
+/* Aggregate the columns of 'matrix' as vertical. For example: 
 
-   float total = 0;
-   // Iterates the 'matrix'.
-   for (int i=0; i<row; i++) { 
-      for (int j=0; j<col; j++) { 
-         // sum each row into 'total'
-         total += matrix[i][j]; 
-      } 
-   // and in each iteration, insert the total into 'result'.
-   result[i][0] = total; total = 0; }
+double matrix[2][3] = {
+   {7, 5, -5}, 
+   {7, -1, 3},
+};
+double result[2][1];
+agg_ver(2, 3, matrix, result);
+display_matrix(2, 1, result);
+
+7.000000 
+9.000000
+*/
+void agg_ver(int row, int col, double matrix[row][col], 
+             double result[row][1]) {
+   // The total value of the columns of 'matrix'.
+   double total = 0.0;
+   // Aggregate the columns of 'matrix'.
+   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
+      total += matrix[i][j]; } // sum the columns
+      result[i][0] = total; // assign 'total'
+      total = 0; } // reset the 'total'
 }
 
-/* Get the transpose of 'matrix' elements. */
-void transpose(int row, int col, float matrix[row][col], 
-                 float result[col][row]) {
-   // Iterate the 'matrix'.
+/* Generate the transpose of 'matrix'. With another word, 
+exchange rows and colulmns of 'matrix'. For example: 
+
+double matrix[3][2] = {
+   {7, 5}, 
+   {-1, 3}, 
+   {0, -5},
+};
+double result[2][3];
+transpose(3, 2, matrix, result);
+display_matrix(2, 3, result);
+
+7.000000 -1.000000 0.000000 
+5.000000 3.000000 -5.000000
+*/
+void transpose(int row, int col, double matrix[row][col], 
+               double result[col][row]) {
+   // Exchange the rows and columns of 'matrix'.
    for (int i=0; i<row; i++) 
       for (int j=0; j<col; j++)
          result[j][i] = matrix[i][j];
 }
 
-/* Return true, if 'matrix' is lower triangular. */
-bool islowertri(int row, int col, float matrix[row][col]) {
+/* Return true, if the 'matrix' is lower triangular, otherwise
+return false. For example: 
 
-   // Count the same elements.
-   int issame = 0;
-   // Append the upper triangular elements.
-   int index = 0; float ltri[row];
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row-1; i++) { for (int j=i+1; j<col; j++) {
-   ltri[index] = matrix[i][j]; index ++; }}
-   // Generate the zeros matrix.
-   float zero[1][index]; zeros(1, index, zero);
-   // Compare the 'zero' and 'ltri' elements.
-   for (int j=0; j<index; j++) 
-   if (zero[0][j] == 0 && ltri[j] == 0) issame ++;
+double matrix[4][4] = {
+   {1, 0, 0, 0}, 
+   {2, 4, 0, 0}, 
+   {6, 7, 8, 0}, 
+   {5, 7, 4, 5}, 
+};
+int result = islowertri(4, 4, matrix);
+printf("%d\n", result);
+1
+*/
+bool islowertri(int row, int col, double matrix[row][col]) {
+   // Lower triangular matrix must be squre.
+   if (row != col) return false;
+   // Collect the upper side of 'matrix'.
+   double ltri[(row * col - row) / 2]; int index = 0;
+   for (int i=0; i<row-1; i++) for (int j=i+1; j<col; j++) 
+      ltri[index] = matrix[i][j], index ++; 
+   // Control the elements of 'ltri'. If any element is not 
+   // zero, and then return false.
+   for (int i=0; i<index; i++)
+      if (ltri[i] != 0.0) return false;
 
-   if (issame == index && row == col) return true;
+   return true;
+}
+
+/* Return true, if the 'matrix' is upper triangular, otherwise
+return false. For example: 
+
+double matrix[4][4] = {
+   {1, 2, 6, 5},  
+   {0, 4, 7, 7},  
+   {0, 0, 8, 4}, 
+   {0, 0, 0, 5},
+};
+int result = isuppertri(4, 4, matrix);
+printf("%d\n", result);
+1
+*/
+bool isuppertri(int row, int col, double matrix[row][col]) {
+   // That method can be generated from above method. 
+   // Firsly, get the transpose of 'matrix'.
+   double utri[col][row]; transpose(row, col, matrix, utri);
+   // And then check it using 'islowertri' method.
+   if (islowertri(col, row, utri)) return true;
    else return false;
 }
 
-/* Return true, if 'matrix' is upper triangular. */
-bool isuppertri(int row, int col, float matrix[row][col]) {
+/* Return true, if the 'matrix' is upper or lower triangular, 
+otherwise return false. For example: 
 
-   // Get the transpose of 'matrix'.
-   float matrix2[col][row]; 
-   transpose(row, col, matrix, matrix2);
-   // Can be used 'isltri' method in here.
-   if (islowertri(col, row, matrix2)) return true;
+double matrix[3][3] = {
+   {1, 2, 6},  
+   {0, 4, 7},  
+   {0, 0, 8}, 
+};
+int result = istriangle(3, 3, matrix);
+printf("%d\n", result);
+1
+*/
+bool istriangle(int row, int col, double matrix[row][col]) {
+   // Use the above two methods for that.
+   int isltri = islowertri(row, col, matrix);
+   int isutri = isuppertri(row, col, matrix);
+   if (isltri || isutri) return true;
    else return false;
 }
 
-/* Return true, if 'matrix' is upper or lower triangular. */
-bool istriangle(int row, int col, float matrix[row][col]) {
+/* Calculate the mean of 'matrix'. For exapmle: 
 
-   // Can be used both 'islowertri' and 'isuppertri' methods.
-   if (islowertri(row, col, matrix) || 
-      isuppertri(row, col, matrix)) 
-      return true; else return false;
-}
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -8}, 
+   {-5, 1, 4}, 
+};
+double result = mean(3, 3, matrix);
+printf("%f\n", result);
 
-/* Get mean of 'matrix'. */
-float mean(int row, int col, float matrix[row][col]) {
-
-   // Sum the all elements of given 'matrix'.
-   float total = 0;
-   // Iterate the matrix.
-   for (int i=0; i<row; i++) 
-      for (int j=0; j<col; j++) 
-         total += matrix[i][j];
+0.555556
+*/
+double mean(int row, int col, double matrix[row][col]) {
+   // The total value of 'matrix'.
+   double total;
+   // Sum the all elements of 'matrix'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      total += matrix[i][j];
 
    return total / (row * col);
 }
 
-/* Sort the all elements of 'matrix' by ascending or descending. 
-'method' must be 'A' or 'a' for ascending order; 'D' or 'd'
-for descending order. */
-void sort(char method, int row, int col, float matrix[row][col], 
-          float result[row][col]) {
+/* Sort the elements of 'matrix' in ascending order. 
+For example: 
 
-   int temp = 0;
-   // Convert the 'matrix' to 'array'.
-   float array[row * col];
+double matrix[3][4] = {
+   {2, -4, 0, -8}, 
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result[3][4];
+sort_asc(3, 4, matrix, result);
+display_matrix(3, 4, result);
+
+-8.000000 -8.000000 -5.000000 -4.000000 
+0.000000 0.000000 1.000000 2.000000 
+4.000000 7.000000 7.000000 8.000000
+*/
+void sort_asc(int row, int col, double matrix[row][col], 
+              double result[row][col]) {
+   // Convert the 'matrix' to the 'array'.
+   double array[row * col]; 
    _to_array_(row, col, matrix, array);
-
-   // Sort the elementsin the 'array' according to 'method'.
-   for (int i=0; i<row*col; i++) 
-      for (int j=i+1; j<row*col; j++){
-         // Sor the elements in ascending order.
-         if (method == 'A' || method == 'a') { 
-            if (array[i] > array[j]) { temp = array[i]; 
-            array[i] = array[j]; array[j] = temp; }}
-         // Sort the elements in descending order.
-         else if (method == 'D' || method == 'd') { 
-            if (array[i] < array[j]) { temp = array[i]; 
-            array[i] = array[j]; array[j] = temp; }}
-         // Otherwise return the error.
-         else {
-            _raise_error_("MatrixError", __FILE__, 
-            "'method' must be 'A', 'a', 'D' or 'd'.", __LINE__);
-   }}
-   // Lastly, convert the ordered 'array' to 'matrix'.
+   int temp = 0;
+   // Sort the elements of 'array'.
+   for (int i=0; i<row*col; i++)
+      for (int j=0; j<row*col; j++)
+         if (array[i] < array[j]) temp = array[i], 
+            array[i] = array[j], array[j] = temp;
+   // Lastly, convert the sorted 'array' to 'result'.
    _to_matrix_(row, col, array, result);
 }
- 
-/* Calculate the standard deviation of 'matrix'. */
-float stdev(int row, int col, float matrix[row][col]) {
 
-   // Calculate the mean.
-   float m = mean(row, col, matrix);
-   float pows = 0;
+/* Sort the elements of 'matrix' in descending order. For example: 
 
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      // Get the pows of iteration.
-      float _abs = m - matrix[i][j];
-      if (_abs < 0) pows += pow(-1 * _abs, 2); 
-      else pows += pow(_abs, 2); 
-   }}
-   // Calculate the standard deviation and return that.
+double matrix[3][4] = {
+   {2, -4, 0, -8}, 
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result[3][4];
+sort_des(3, 4, matrix, result);
+display_matrix(3, 4, result);
+
+8.000000 7.000000 7.000000 4.000000 
+2.000000 1.000000 0.000000 0.000000 
+-4.000000 -5.000000 -8.000000 -8.000000
+*/
+void sort_des(int row, int col, double matrix[row][col], 
+              double result[row][col]) {
+   // Convert the 'matrix' to the 'array'.
+   double array[row * col]; 
+   _to_array_(row, col, matrix, array);
+   int temp = 0;
+   // Sort the elements of 'array'.
+   for (int i=0; i<row*col; i++)
+      for (int j=0; j<row*col; j++)
+         if (array[i] > array[j]) temp = array[i], 
+            array[i] = array[j], array[j] = temp;
+   // Lastly, convert the sorted 'array' to 'result'.
+   _to_matrix_(row, col, array, result);
+}
+
+/* Calculate the standard deviation of 'matrix'. For example 
+
+double matrix[3][4] = {
+   {2, -4, 0, -8}, 
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result = stddev(3, 4, matrix);
+printf("%f\n", result);
+
+5.405758
+*/
+double stddev(int row, int col, double matrix[row][col]) {
+   // Calculate the mean of 'matrix'.
+   double m = mean(row, col, matrix);
+   double pows = 0; // sum the pows
+   // Iterate and process the each element of 'matrix'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) {
+      // Get the differences between 'mean' and elements.
+      double diff = m - matrix[i][j];
+      // According to sign of 'diff', sum the pow of it.
+      if (diff < 0) pows += pow(-1 * diff,  2);
+      else pows += pow(diff, 2);
+   }
+   // Get the squre root of result, and then return it.
    return sqrt(pows / (row * col));
 }
 
-/* Find the median of 'matrix'. */
-float median(int row, int col, float matrix[row][col]) {
+/* Find the median element of 'matrix'. For example: 
 
-   // Sort the all elements of 'matrix'.
-   float sorted[row][col]; sort('a', row, col, matrix, sorted);
-   // Convert the 'sorted' into array.
-   float array[row * col]; _to_array_(row, col, sorted, array);
+double matrix[3][4] = {
+   {2, -4, 0, -8}, 
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result = median(3, 4, matrix);
+printf("%f\n", result);
 
-   // Find the median of 'array'.
-   if ((row * col) % 2 == 1) return array[(int) (row * col / 2)];
+0.500000
+*/
+double median(int row, int col, double matrix[row][col]) {
+   // Sort the all elements of 'matrix' is ascendng form.
+   double sorted[row][col]; 
+   sort_des(row, col, matrix, sorted);
+   // Convert the 'sorted' matrix to 'array'.
+   double array[row * col];
+   _to_array_(row, col, sorted, array);
+   // And then determine the median.
+   if ((row * col) % 2 == 1)
+      return array[(int) (row * col / 2)];
    else {
       int first = (int) (row * col / 2) - 1;
       int second = (int) (row * col / 2);
@@ -555,194 +685,356 @@ float median(int row, int col, float matrix[row][col]) {
    }
 }
 
-/* Shuffle the 'matrix' elements. */
-void shuffle(int row, int col, float matrix[row][col], 
-             float result[row][col]) {
+/* Shuffle the elements of 'matrix' randomly. For example: 
 
-   // Generate the random indexes.
-   int array[row * col]; _generate_indexes_(row, col, array);
-   // Convert the 'matrix' into array.
-   float array2[row * col]; _to_array_(row, col,  matrix, array2);
+double matrix[3][4] = {
+   {2, -4, 0, -8}, 
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result[3][4];
+shuffle(3, 4, matrix, result);
+display_matrix(3, 4, result);
 
-   int start = 0; // Fill in the 'result' matrix.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = array2[array[start]-1]; start ++; }} 
-}
-
-/* Reshape the 'matrix' elements. */
-void reshape(int row1, int col1, float matrix[row1][col1], 
-             int row2, int col2, float result[row2][col2]) {
-
-   // Start index for 'result' matrix.
-   int start = 0;
-   // Check if rows and cols of each two 'matrix1' and 'result'
-   // are equals, else return an error message.
-   if (row1 * col1 != row2 * col2) 
-      _raise_error_("MatrixError", __FILE__, 
-                    "Found dimension discrepancy.", __LINE__);
-
-   // Convert the 'matrix1' into array.
-   float array[row1 * col1]; _to_array_(row1, col1, matrix, array);
-   // Iterate the 'result' matrix.
-   for (int i=0; i<row2; i++) { for (int j=0; j<col2; j++) {
-   result[i][j] = array[start]; start ++; }}
-}
-
-/* Concatenate the 'matrix1' and 'matrix2' as horizontal. */
-void concat0(int row1, int col1, float matrix1[row1][col1], 
-             int row2, int col2, float matrix2[row2][col2], 
-             float result[row1 + row2][col1]) {
-
-   // Check if given two matrices are proper or not.
-   if (col1 != col2) 
-      _raise_error_("MatrixError", __FILE__, 
-                    "Found dimension discrepancy.", __LINE__);
-
-   // Iterate the 'matrix1'.
-   for (int i=0; i<row1; i++) { for (int j=0; j<col1; j++) {
-   result[i][j] = matrix1[i][j]; }}
-   // Iterate the 'matrix2'.
-   for (int i=0; i<row2; i++) { for (int j=0; j<col2; j++){
-   result[i+row1][j] = matrix2[i][j]; }}
-}
-
-/* Concatenate the 'matrix1' and 'matrix2' as vertical. */
-void concat1(int row1, int col1, float matrix1[row1][col1], 
-             int row2, int col2, float matrix2[row2][col2], 
-             float result[row1][col1 + col2]) {
-
-   // Check if given two matrices are proper or not.
-   if (row1 != row2) 
-      _raise_error_("MatrixError", __FILE__, 
-                    "Found dimension discrepancy.", __LINE__);
-
-   // Iterate the 'matrix1'.
-   for (int i=0; i<row1; i++) { for (int j=0; j<col1; j++) {
-   result[i][j] = matrix1[i][j]; }}
-   // Iterate the 'matrix2'.
-   for (int i=0; i<row2; i++) { for (int j=0; j<col2; j++){
-   result[i][j+col1] = matrix2[i][j]; }}
-}
-
-/* Add the 'matrix1' and 'matrix2' elements. */
-void add(int row, int col, float matrix1[row][col], 
-         float matrix2[row][col], float result[row][col]) {
-
-   // Iterate the 'matrix1' and 'matrix2'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = matrix1[i][j] + matrix2[i][j]; }}
-}
-
-/* Subtract the 'matrix1' from 'matrix2' elements. */
-void subtract(int row, int col, float matrix1[row][col], 
-              float matrix2[row][col], float result[row][col]) {
-
-   // Iterate the 'matrix1' and 'matrix2'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = matrix1[i][j] - matrix2[i][j]; }}
-}
-
-/* Multiplies 'scaler' and 'matrix' elements. */
-void scaler_mul(float scaler, int row, int col, 
-                float matrix[row][col], float result[row][col]) {
-
-   // Iterate the 'matrix'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = matrix[i][j] * scaler; }}
+4.000000 8.000000 7.000000 -4.000000 
+7.000000 0.000000 0.000000 -8.000000 
+2.000000 -5.000000 -8.000000 1.000000
+*/
+void shuffle(int row, int col, double matrix[row][col], 
+             double result[row][col]) {
+   // Convert the 'matrix' into 'array'.
+   double array[row * col]; _to_array_(row, col, matrix, array);
+   // Generate the random indexes between 0 and row*col-1.
+   int indexes[row * col]; 
+   // Adjust the seed for generating indexes contigously.
+   srand(time(NULL)); int start = 0;
+   while (true) {
+      // Generate the random index.
+      int index = rand() % (row * col);
+      // Each index can be found for one time in 'indexes'.
+      int existance = 0;
+      // To check this, in each time, count the existance of it.
+      for (int i=0; i<start; i++) if (indexes[i] != index) 
+         existance ++;
+      if (existance == start) indexes[start] = index, start ++;
+      // Break up the loop if 'start' reach its max value. 
+      if (start == row*col) break;
+   }
+   start = 0; 
+   // Put the elements of 'matrix' into 'result'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = array[indexes[start]], start ++;
 }
 
 
-/* Multiplies the 'matrix1' and 'matrix2' elements as dot. */
-void dot_mul(int row, int col, float matrix1[row][col], 
-             float matrix2[row][col], float result[row][col]) {
+/* Reshape dimension of 'matrix' and then convert it to 'result'.
+For example: 
 
-   // Iterate the 'matrix1' and 'matrix2'.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = matrix1[i][j] * matrix2[i][j]; }}
+double matrix[3][4] = {
+   {2, -4, 0, -8}, 
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result[2][6];
+reshape(3, 4, matrix, 2, 6, result);
+display_matrix(2, 6, result);
+
+2.000000 -4.000000 0.000000 -8.000000 8.000000 7.000000 
+-8.000000 7.000000 -5.000000 1.000000 4.000000 0.000000
+*/
+void reshape(int row1, int col1, double matrix[row1][col1], 
+             int row2, int col2, double result[row2][col2]) {
+   // Check if the dimensions of 'matrix' and 'result' are same.
+   assert (row1 * col1 == row2 * col2);
+   // Convert 'matrix' into 'array'.
+   double array[row1 * col1]; int index = 0;
+   _to_array_(row1, col1, matrix, array);
+   // Assign the elements of 'array' into 'result'.
+   for (int i=0; i<row2; i++) for (int j=0; j<col2; j++)
+      result[i][j] = array[index], index ++;
 }
 
-/* Multiplies the 'matrix1' and 'matrix2' as cross. */
-void cross_mul(int row1, int col1, float matrix1[row1][col1], 
-             int row2, int col2, float matrix2[row2][col2], 
-             float result[row1][col2]) {
+/* Concatenate the 'matrix1' and 'matrix2' as horizontal. 
+For example: 
 
-   // These variable is necassery when multiplies elements.
-   float total = 0;
-   int index = col1;
-   // Check if given two matrices are proper or not.
-   if (col1 != row2) 
-      _raise_error_("MatrixError", __FILE__, 
-                    "Found dimension discrepancy.", __LINE__);
-   // Get transpose of 'matrix2'.
+double matrix1[1][4] = {
+   {2, -4, 0, -8}, 
+};
+double matrix2[2][4] = {
+   {8, 7, -8, 7}, 
+   {-5, 1, 4, 0}, 
+};
+double result[3][4];
+concat_hor(1, 4, matrix1, 2, 4, matrix2, result);
+display_matrix(3, 4, result);
 
-   float transposed[col2][row2];
+2.000000 -4.000000 0.000000 -8.000000 
+8.000000 7.000000 -8.000000 7.000000 
+-5.000000 1.000000 4.000000 0.000000 
+*/
+void concat_hor(int row1, int col1, double matrix1[row1][col1], 
+                int row2, int col2, double matrix2[row2][col2], 
+                double result[row1 + row2][col1]) {
+   // Check the dimension harmony of 'matrix1' and 'matrix2'.
+   assert (col1 == col2);
+   // Concatenate the both matrix onto 'result'.
+   for (int i=0; i<row1; i++) for (int j=0; j<col1; j++)
+      result[i][j] = matrix1[i][j];
+   for (int i=0; i<row2; i++) for (int j=0; j<col2; j++)
+      result[i+row1][j] = matrix2[i][j];
+}
+
+/* Concatenate the 'matrix1' and 'matrix2' as vertical. 
+For example: 
+
+double matrix1[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -8}, 
+   {-5, 1, 4},
+};
+double matrix2[3][1] = {
+   {-8}, 
+   {7}, 
+   {0},
+};
+double result[3][4];
+concat_ver(3, 3, matrix1, 3, 1, matrix2, result);
+display_matrix(3, 4, result);
+
+2.000000 -4.000000 0.000000 -8.000000 
+8.000000 7.000000 -8.000000 7.000000 
+-5.000000 1.000000 4.000000 0.000000 
+*/
+void concat_ver(int row1, int col1, double matrix1[row1][col1], 
+                int row2, int col2, double matrix2[row2][col2], 
+                double result[row1][col1 + col2]) {
+   // Check the dimension harmony of 'matrix1' and 'matrix2'.
+   assert (row1 == row2);
+   // Concatenate the both matrix onto 'result'.
+   for (int i=0; i<row1; i++) for (int j=0; j<col1; j++)
+      result[i][j] = matrix1[i][j];
+   for (int i=0; i<row2; i++) for (int j=0; j<col2; j++)
+      result[i][j+col1] = matrix2[i][j];
+}
+
+/* Add the elements of 'matrix1' and 'matrix2'. For example: 
+
+double matrix1[2][2] = {
+   {2, -4}, 
+   {8, 7}, 
+};
+double matrix2[2][2] = {
+   {-2, 4}, 
+   {-8, -7}, 
+};
+double result[2][2];
+add(2, 2, matrix1, matrix2, result);
+display_matrix(2, 2, result);
+
+0.000000 0.000000 
+0.000000 0.000000
+*/
+void add(int row, int col, double matrix1[row][col], 
+         double matrix2[row][col], double result[row][col]) {
+   // Add the elements with each other mutually.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = matrix1[i][j] + matrix2[i][j]; 
+}
+
+/* Subtract the elements of 'matrix2' from 'matrix1'. 
+For example:
+
+double matrix1[2][2] = {
+   {2, -4}, 
+   {8, 7}, 
+};
+double matrix2[2][2] = {
+   {-2, 4}, 
+   {-8, -7}, 
+};
+double result[2][2];
+add(2, 2, matrix1, matrix2, result);
+display_matrix(2, 2, result);
+
+4.000000 -8.000000 
+16.000000 14.000000
+*/
+void subtract(int row, int col, double matrix1[row][col], 
+              double matrix2[row][col], double result[row][col]) {
+   // Subtract the elements with each other mutually.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = matrix1[i][j] - matrix2[i][j]; 
+}
+
+/* Multiplies 'scaler' and elements of 'matrix'. For example: 
+
+double matrix[2][2] = {
+   {2, -4}, 
+   {8, 7}, 
+};
+double result[2][2];
+scaler_mul(-4.8, 2, 2, matrix, result);
+display_matrix(2, 2, result);
+
+-9.600000 19.200000 
+-38.400000 -33.600000
+*/
+void scaler_mul(double scaler, int row, int col, 
+                double matrix[row][col], double result[row][col]) {
+   // Multiply the elements of 'matrix' with 'scaler'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = matrix[i][j] * scaler; 
+}
+
+
+/* Multiplies the elements of 'matrix1' and 'matrix2' as dot. 
+For example:
+
+double matrix1[2][2] = {
+   {2, -4}, 
+   {8, 7}, 
+};
+double matrix2[2][2] = {
+   {-2, 4}, 
+   {-8, -7}, 
+};
+double result[2][2];
+dot_mul(2, 2, matrix1, matrix2, result);
+display_matrix(2, 2, result);
+
+-4.000000 -16.000000 
+-64.000000 -49.000000
+*/
+void dot_mul(int row, int col, double matrix1[row][col], 
+             double matrix2[row][col], double result[row][col]) {
+   // Multiply the elements with each other mutually.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      result[i][j] = matrix1[i][j] * matrix2[i][j];
+}
+
+/* Multiply the elements of 'matrix1' and 'matrix2' as cross.
+For example: 
+
+double matrix1[2][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+};
+double matrix2[3][2] = {
+   {-2, 4}, 
+   {-8, -7}, 
+   {9, 7}, 
+};
+double result[2][2];
+cross_mul(2, 3, matrix1, 3, 2, matrix2, result);
+display_matrix(2, 2, result);
+
+28.000000 36.000000 
+-117.000000 -52.000000
+*/
+void cross_mul(int row1, int col1, double matrix1[row1][col1], 
+               int row2, int col2, double matrix2[row2][col2], 
+               double result[row1][col2]) {
+   // Check the dimension harmony of the matrices.
+   assert (col1 == row2);
+   // Get the transpose of 'matrix2'.
+   double transposed[col2][row2];
    transpose(row2, col2, matrix2, transposed);
-   // Save the results in here.
-   int start = 0; float array[row1*col2]; 
-
-   // Iterate the 'matrix1' and 'matrix2'.
-   for (int i=0; i<row1; i++) {       
-      for (int j=0; j<col2; j++) {    
-         for (int k=0; k<row2; k++) { 
-            // Multiplies elements of each matrices.
-            float value = matrix1[i][k] * transposed[j][k];
+   // These variable is necassery when multiply the elements.
+   double total = 0; int index = col1; int start = 0;
+   double array[row1 * col2];
+   // Iterate the elements of 'matrix1' and 'matrix2'.
+   for (int i=0; i<row1; i++)
+      for (int j=0; j<col2; j++)
+         for (int k=0; k<row2; k++) {
+            // Multiply the elements with each other.
+            double value = matrix1[i][k] * transposed[j][k];
             total += value; index --;
-            // Save the results onto 'result' matrix.
-            if (index == 0) {
-            array[start] = total; 
-            total = 0; index = col1; start ++;}
-   }}}
-   // Fill in the 'result' matrix.
+            // Save the results onto 'array'.
+            if (index == 0) array[start] = total, 
+            total = 0, index = col1, start ++;
+         }
+   // Fill the 'result' with elements of 'array'.
    _to_matrix_(row1, col2, array, result);
 }
 
-/* Divides the 'scaler' to 'matrix'. */
-void scaler_div(float scaler, int row, int col, 
-                float matrix[row][col], float result[row][col]) {
+/* Divide the 'scaler' to elements of 'matrix'. For example: 
 
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = matrix[i][j] / scaler; }}
+double matrix[2][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+};
+double result[2][3];
+scaler_div(0.5, 2, 3, matrix, result);
+display_matrix(2, 3, result);
+
+4.000000 -8.000000 0.000000 
+16.000000 14.000000 -10.000000 
+*/
+void scaler_div(double scaler, int row, int col, 
+                double matrix[row][col], double result[row][col]){
+   // Iterate the elements of 'matrix' and divide it.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = matrix[i][j] / scaler;
 }
 
-/* Divides the 'matrix1' to 'matrix2'. */
-void dot_div(int row, int col, float matrix1[row][col], 
-             float matrix2[row][col], float result[row][col]) {
+/* Divide the elements of 'matrix1' to 'matrix2'. For example: 
 
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-   result[i][j] = matrix1[i][j] / matrix2[i][j]; }}
+double matrix1[2][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+};
+double matrix2[2][3] = {
+   {3, 8, -3}, 
+   {5, -5, 0},  
+};
+double result[2][3];
+dot_div(2, 3, matrix1, matrix2, result);
+display_matrix(2, 3, result); 
+
+0.666667 -0.500000 -0.000000 
+1.600000 -1.400000 -inf
+*/
+void dot_div(int row, int col, double matrix1[row][col], 
+             double matrix2[row][col], double result[row][col]){
+   // Iterate the elements of 'matrix' and divide it.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++)
+      result[i][j] = matrix1[i][j] / matrix2[i][j];
 }
 
 /* --------------------------------------------------------------- */
 /* --------------------- Advanced Methods ------------------------ */
 /* --------------------------------------------------------------- */
 
-/* Calculate the determinant of any square matrix. */
-float det(int row, int col, float matrix[row][col]) {
+/* Calculate the determinant of square 'matrix'. For example: 
 
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result = det(3, 3, matrix);
+printf("%f\n", result);
+
+552.000000
+*/
+double det(int row, int col, double matrix[row][col]) {
    // Check if 'matrix' is square or not.
-   if (row != col) 
-      _raise_error_("MatrixError", __FILE__, 
-                    "'matrix' must be square.", __LINE__);
-
+   assert (row == col);
    // Calculate the determinant of 1x1 matrix.
    if (row == 1) return matrix[0][0];
-
    // Calculate the determinant of 2x2 matrix.
    if (row == 2) {
       // Multiply the diagonals and get the difference.
-      float s1 = matrix[0][0] * matrix[1][1];
-      float s2 = matrix[0][1] * matrix[1][0];
+      double s1 = matrix[0][0] * matrix[1][1];
+      double s2 = matrix[0][1] * matrix[1][0];
       return s1 - s2;
    }
-
    // Calculate the determinant of 3x3 and more matrix.
    if (row >= 3) {
       // The main strategy is that 'matrix' will be converted
       // upper triangular form. And then multiply the elements
       // in which main diagonal of upper triangular matrix.
-      float uppertri[row][col];
+      double uppertri[row][col];
       // Copy the 'matrix' into 'uppertri' for converting.
       _copy_matrix_(row, col, matrix, uppertri);
       // Control the iteration number with 'k' variable.
@@ -754,8 +1046,8 @@ float det(int row, int col, float matrix[row][col]) {
          // Iterate the all elements of 'matrix'.
          for (int i=1+k; i<row; i++) {
             // Generally, these sub-matrices will be generated.
-            float m1[1][col]; float m2[1][col]; float m3[1][col];
-            float m4[1][col];
+            double m1[1][col]; double m2[1][col]; 
+            double m3[1][col]; double m4[1][col];
             // In some cases, this algorithm will raise the error.
             // Because if element in main diagoal is zero, during
             // division operation, 'coef' will be 'nan'. To fix
@@ -769,7 +1061,7 @@ float det(int row, int col, float matrix[row][col]) {
                switching ++;
             }
             // Apart from that, continue generating the matrix.
-            float coef = -1 * uppertri[i][k] / uppertri[k][k];
+            double coef = -1 * uppertri[i][k] / uppertri[k][k];
             // Generate the sub-matrices and fill in it.
             for (int j=0; j<col; j++) m1[0][j] = uppertri[k][j];
             for (int j=0; j<col; j++) m2[0][j] = uppertri[i][j];
@@ -786,7 +1078,7 @@ float det(int row, int col, float matrix[row][col]) {
          if (k == row) break;
       }
       // To get the determinant of 'matrix', it's enough to 
-      float det = 1.0;
+      double det = 1.0;
       // multiply the main diagonal elements of 'uppertri' matrix.
       for (int i=0; i<row; i++) det *= uppertri[i][i];
 
@@ -794,131 +1086,177 @@ float det(int row, int col, float matrix[row][col]) {
    }
 }
 
-/* Extract the minors map of 'matrix'. */
-void minors(int row, int col, float matrix[row][col], 
-            float result[row][col]) {
+/* Extract the minors map of 'matrix'. For example:
 
-   // Check if given 'matrix' is proper for this method.
-   if (col == 1 || row == 1) 
-      _raise_error_("MatrixError", __FILE__,
-                    "1x1 matrix is not acceptable.", __LINE__);
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result[3][3];
+minors(3, 3, matrix3, result);
+display_matrix(3, 3, result);
 
-   // Iterate the 'matrix' elements.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
+84.000000 96.000000 0.000000 
+-28.000000 14.000000 46.000000 
+20.000000 -10.000000 46.000000
+*/
+void minors(int row, int col, double matrix[row][col], 
+            double result[row][col]) {
+   // Check if the 'matrix' is proper form for that.
+   assert (row == col || row != 1 || col != 1);
+   // Iterate the elements of 'matrix'.
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) {
       // Copy the 'matrix' in here. 
-      float copied[row][col]; 
+      double copied[row][col]; 
       _copy_matrix_(row, col, matrix, copied); 
       // Parse just the 'matrix' according to first row.
-      float parsed[row-1][col]; 
+      double parsed[row-1][col]; 
       _del_row_(i, row, col, copied, parsed);
       // Get the transpose of 'deleted'.
-      float transposed[col][row-1]; 
+      double transposed[col][row-1]; 
       transpose(row-1, col, parsed, transposed);
       // Delete the again first row of 'transposed'.
-      float parsed2[col-1][row-1];
+      double parsed2[col-1][row-1];
       _del_row_(j, col, row-1, transposed, parsed2);
       // Again transposed the 'deleted2' matrix.
-      float transposed2[row-1][col-1];
+      double transposed2[row-1][col-1];
       transpose(col-1, row-1, parsed2, transposed2);
       // Calculate the determinant of reduced 'matrix' and 
       // then replace it into 'result' matrix.
       result[i][j] = det(row-1, col-1, transposed2); 
-   }}
+   }
 }
 
-/* Extract the cofactors map of 'matrix'. */
-void cofactors(int row, int col, float matrix[row][col], 
-               float result[row][col]) {
+/* Extract the cofactors map of 'matrix'. For example: 
 
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result[3][3];
+cofactors(3, 3, matrix, result);
+display_matrix(3, 3, result);
+
+84.000000 -96.000000 0.000000 
+28.000000 14.000000 -46.000000 
+20.000000 10.000000 46.000000 
+*/
+void cofactors(int row, int col, double matrix[row][col], 
+               double result[row][col]) {
    // Check if given 'matrix' is proper for this method.
-   if (col == 1 || row == 1) 
-      _raise_error_("MatrixError", __FILE__,
-                    "2x2 matrix is not acceptable.", __LINE__);
-
+   assert (row == col || row != 1 || col != 1);
    // Extract the minors map of 'matrix'.
    minors(row, col, matrix, result);
    // Multiply the elements that is odd of sum of indexes by -1.
-   for (int i=0; i<row; i++) { for (int j=0; j<col; j++) {
-      if ((i+j)%2 == 1 && result[i][j] != 0.0)            
-         result[i][j] = -1 * result[i][j];                
-   }}                                                      
+   for (int i=0; i<row; i++) for (int j=0; j<col; j++) 
+      if ((i+j) % 2 == 1 && result[i][j] != 0.0)            
+         result[i][j] = -1 * result[i][j];     
 }
 
-/* Return true, if 'matrix' is invertible. */
-bool isinvertible(int row, int col, float matrix[row][col]) {
+/* Return true, if 'matrix' is invertible (its determinant is 
+different from zero), otherwise return false. For example: 
 
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+int result = isinvertible(3, 3, matrix);
+printf("%d\n", result);
+1
+*/
+bool isinvertible(int row, int col, double matrix[row][col]) {
    // Calculate the determinant of 'matrix'.
-   float determinant = det(row, col, matrix);
-   if (determinant != 0) return true; else return false;
+   double determinant = det(row, col, matrix);
+   if (determinant != 0.0) return true;
+   else return false;
 }
 
-/* Calculate the adjoint of 'matrix'.*/
-void adjoint(int row, int col, float matrix[row][col], 
-            float result[row][col]) {
+/* Calculate the adjoint of 'matrix'. For example: 
 
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result[3][3];
+adjoint(3, 3, matrix, result);
+display_matrix(3, 3, result);
+
+84.000000 28.000000 20.000000 
+-96.000000 14.000000 10.000000 
+0.000000 -46.000000 46.000000
+*/
+void adjoint(int row, int col, double matrix[row][col], 
+            double result[row][col]) {
    // Extract the cofactors map into 'cofactor'.
-   float cofactor[row][col]; 
+   double cofactor[row][col]; 
    cofactors(row, col, matrix, cofactor);
    // Get transpose of 'cofactor' into 'result'.
    transpose(row, col, cofactor, result);
 }
 
-/* Calculate the inverse of 'matrix'. */
-void inverse(int row, int col, float matrix[row][col], 
-             float result[row][col]) {
+/* Calculate the inverse of 'matrix'. For example: 
 
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result[3][3];
+inverse(3, 3, matrix, result);
+display_matrix(3, 3, result);
+
+0.152174 0.050725 0.036232 
+-0.173913 0.025362 0.018116 
+0.000000 -0.083333 0.083333
+*/
+void inverse(int row, int col, double matrix[row][col], 
+             double result[row][col]) {
    // Check if 'matrix' is invertible or not.
-   if (isinvertible(row, col, matrix) == false) 
-      _raise_error_("MatrixError", __FILE__, 
-                    "'matrix' must be invertible.", __LINE__);
-
+   assert (isinvertible(row, col, matrix));
    // Calculate the determinant of 'matrix'.
-   float determinant = det(row, col, matrix);
+   double determinant = det(row, col, matrix);
    // Extract the adjoint of 'matrix'.
-   float adj[row][col]; adjoint(row, col, matrix, adj);
+   double adj[row][col]; adjoint(row, col, matrix, adj);
    // Calculate the inverse with 'scaler_div' method.
    scaler_div(determinant, row, col, adj, result);
 }
 
-/* Divide the 'matrix1' to 'matrix2' as cross */
-void cross_div(int row, int col, float matrix1[row][col], 
-               float matrix2[row][col], float result[row][col]){
+/* Solve a linear augmented matrix. For example: 
 
-   // Check if 'matrix2' is invertible or not.
-   if (isinvertible(row, col, matrix2) == false) 
-      _raise_error_("MatrixError", __FILE__,
-                   "Both matrices must be invertible.", __LINE__);
+double matrix[3][4] = {
+   {2, -4, 0, 8}, 
+   {8, 7, -5, -9}, 
+   {8, 7, 7, 0}, 
+};
+double result[3][1];
+solve(3, 4, matrix, result);
+display_matrix(3, 1, result);
 
-   // Get inverse of 'matrix2'.
-   float inv[row][col]; inverse(row, col, matrix2, inv);
-   // Multiply the 'matrix1' and 'inv' as cross.
-   cross_mul(row, col, matrix1, row, col, inv, result);
-}
- 
-/* Solve a augmented matrix. */
-void solve(int row, int col, float matrix[row][col], 
-           float result[row][1]) {
-
+0.760870 
+-1.619565 
+0.750000
+*/
+void solve(int row, int col, double matrix[row][col], 
+           double result[row][1]) {
    // Check if 'matrix' is proper form for solving equations.
-   if (col - row != 1) 
-      _raise_error_("MatrixError", __FILE__,
-                    "'matrix' must have augmented form.", __LINE__);
-
+   assert (col - row == 1);
    // Extract the main square and target matrices.
-   float smatrix[row][col-1]; 
-   float target[row][1];
+   double smatrix[row][col-1]; 
+   double target[row][1];
    // Iterate the 'matrix' elements.
    for (int i=0; i<row; i++) for (int j=0; j<col-1; j++) 
       smatrix[i][j] = matrix[i][j]; 
    for (int i=0; i<row; i++) target[i][0] = matrix[i][col-1];
-
    // Check if the 'smatrix' is invertible or not.
-   if (isinvertible(row, col-1, smatrix) == false) 
-      _raise_error_("MatrixError", __FILE__,
-                    "'smatrix' must be invertible.", __LINE__);
-
+   assert (isinvertible(row, col-1, smatrix));
    // Get inverse or 'smatrix'.
-   float inv[row][col-1]; inverse(row, col-1, smatrix, inv);
+   double inv[row][col-1]; 
+   inverse(row, col-1, smatrix, inv);
    // Multiply the 'inv' and 'target' matrices as cross.
    cross_mul(row, col-1, inv, row, 1, target, result);
 }
+

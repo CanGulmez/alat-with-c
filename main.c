@@ -3,7 +3,7 @@
 ALAT project was developed for calculating linear algebratic 
 problems automatically. Especially, in engineering and science,
 linear algebratic problems are so hot topic. So, I've decided to
-write this project. I've seperated this project into 4 parts
+write this project. I've seperated this project into 4 parts 
 mainly. First is 'matrices.h' file which contains the methods
 related to matrix operations. Second is 'vectors.h' file which 
 contain the methods about vector operations. Third is 'apps.h' 
@@ -16,7 +16,6 @@ contact the with me over my e-mail address.
 
 Resource: Elementary Linear Algebra, Sixth Edition by Ron LARSON, 
 David C. FALVO
-
 */
 
 #define AUTHOR   "Can Gulmez"
@@ -37,18 +36,27 @@ David C. FALVO
 // #include "crypts.h"
  
 /* Can be used this method for displaying any matrix. */
-void _display_matrix_(int row, int col, float matrix[row][col]) {
+void display_matrix(int row, int col, double matrix[row][col]){
    // Iterate the 'matrix' and then display all elements.
    for (int i=0; i<row; i++) { 
-      for (int j=0; j<col; j++) {
-         printf("%f ", matrix[i][j]); }
+      for (int j=0; j<col; j++) 
+         printf("%f ", matrix[i][j]); 
       // Put the new line at the end of each row. 
       printf("\n"); }
 }
 
+/* Can be used this method for displaying any array */
+void display_array(int dim, double vector[dim]) {
+   // Iterate the 'vector' and display the all elements.
+   for (int i=0; i<dim; i++)
+      printf("%f ", vector[i]);
+   // Puts the new line at end of vector.
+   printf("\n");
+}
+
 int main(void) {
 
-
+   
 
    return 0;
 }
