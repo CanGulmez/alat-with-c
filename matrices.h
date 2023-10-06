@@ -11,8 +11,8 @@
    cross_mul(), scaler_div()
 
 + Advanced Method:
-   det(), minors(), cofactors(), isinvertable(), adjoint()
-   inverse(), solve()  
+   uppertri(), det(), minors(), cofactors(), isinvertable(), 
+   adjoint(), inverse(), lowertri(), solve()  
 */
 
 /* Libraries */
@@ -628,7 +628,7 @@ void sort_des(int row, int col, double matrix[row][col],
    _to_matrix_(row, col, array, result);
 }
 
-/* Calculate the standard deviation of 'matrix'. For example 
+/* Calculate the standard deviation of 'matrix'. For example:
 
 double matrix[3][4] = {
    {2, -4, 0, -8}, 
@@ -1005,6 +1005,58 @@ void dot_div(int row, int col, double matrix1[row][col],
 /* --------------------- Advanced Methods ------------------------ */
 /* --------------------------------------------------------------- */
 
+/* Extract the upper triangle from 'matrix'. For example: 
+
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result[3][3];
+uppertri(3, 3, matrix, result);
+display_matrix(3, 3, result);
+
+2.000000 -4.000000 0.000000 
+0.000000 23.000000 -5.000000 
+0.000000 0.000000 12.000000
+*/
+void uppertri(int row, int col, double matrix[row][col], 
+              double result[row][col]) {
+   // Check if 'matrix' is square or not.
+   assert (row == col);
+   // Copy the 'matrix' to 'result' initially.
+   _copy_matrix_(row, col, matrix, result);
+   // Control the iteration number with 'k' variable.
+   int k = 0;
+   // Step by step, generate the upper triangular matrix.
+   while (true) {
+      // Iterate the all elements of 'matrix'.
+      for (int i=1+k; i<row; i++) {
+         // Generally, these sub-matrices will be generated.
+         double m1[1][col]; double m2[1][col]; 
+         double m3[1][col]; double m4[1][col];
+         // If there is a zero, if main diagonal contains zero.
+         if (result[k][k] == 0.0) 
+               _switch_rows_(row, col, result, k);
+         // Calculate the coefficients in each time.  
+         double coef = -1 * result[i][k] / result[k][k];
+         // Generate the sub-matrices and fill in it.
+         for (int j=0; j<col; j++) m1[0][j] = result[k][j];
+         for (int j=0; j<col; j++) m2[0][j] = result[i][j];
+         // Multiply the 'm2' matrix with 'coef'.
+         scaler_mul(coef, 1, col, m1, m3);
+         // Add up the 'm2' matrix and 'm3' matrix.
+         add(1, col, m2, m3, m4);
+         // Replace the old row with new 'm4' row.
+         for (int j=0; j<col; j++) result[i][j] = m4[0][j];
+      }
+      // Update the control variable in each iteration.
+      k ++;
+      // Break up the loop if necassary condition are provided.
+      if (k == row) break;
+   }
+}
+
 /* Calculate the determinant of square 'matrix'. For example: 
 
 double matrix[3][3] = {
@@ -1031,9 +1083,7 @@ double det(int row, int col, double matrix[row][col]) {
    }
    // Calculate the determinant of 3x3 and more matrix.
    if (row >= 3) {
-      // The main strategy is that 'matrix' will be converted
-      // upper triangular form. And then multiply the elements
-      // in which main diagonal of upper triangular matrix.
+      // Can be used 'uppertri' method for this.
       double uppertri[row][col];
       // Copy the 'matrix' into 'uppertri' for converting.
       _copy_matrix_(row, col, matrix, uppertri);
@@ -1225,6 +1275,35 @@ void inverse(int row, int col, double matrix[row][col],
    scaler_div(determinant, row, col, adj, result);
 }
 
+/* Extract the lower triangle from 'matrix'. For example: 
+
+double matrix[3][3] = {
+   {2, -4, 0}, 
+   {8, 7, -5}, 
+   {8, 7, 7}, 
+};
+double result[3][3];
+lowertri(3, 3, matrix, result);
+display_matrix(3, 3, result);
+
+1.000000 0.000000 0.000000 
+4.000000 1.000000 0.000000 
+4.000000 1.000000 1.000000
+*/
+void lowertri(int row, int col, double matrix[row][col], 
+              double result[row][col]) {
+   // Check if the 'matrix' is squre or not.
+   assert (row == col);
+   // Previously, extract the upper triangle from 'matrix'. 
+   double utri[row][col];
+   uppertri(row, col, matrix, utri);
+   // Get the inverse of upper triangle from 'matrix'.
+   double inv[row][col];
+   inverse(row, col, utri, inv);
+   // Multiply the inverse of triangle matrix and 'matrix'.
+   cross_mul(row, col, matrix, row, col, inv, result);
+}
+
 /* Solve a linear augmented matrix. For example: 
 
 double matrix[3][4] = {
@@ -1259,4 +1338,3 @@ void solve(int row, int col, double matrix[row][col],
    // Multiply the 'inv' and 'target' matrices as cross.
    cross_mul(row, col-1, inv, row, 1, target, result);
 }
-

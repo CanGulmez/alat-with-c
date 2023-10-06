@@ -12,6 +12,9 @@ Methods:
 #include <string.h>
 #include <math.h>
 
+/* General definations */
+#define PI 3.14159
+
 /* --------------------------------------------------------------- */
 /* ------------------------ Basics Methods ----------------------- */
 /* --------------------------------------------------------------- */
@@ -257,9 +260,9 @@ double angle(char* method, int dim, double vector1[dim],
    for (int i=0; i<dim; i++) pow1 += pow(vector1[i], 2);
    for (int i=0; i<dim; i++) pow2 += pow(vector2[i], 2);
    // Calculate the angle between vectors.
-   double angle = mul / (sqrt(pow1) * sqrt(pow2)); 
+   float angle = mul / (sqrt(pow1) * sqrt(pow2)); 
    // Return the angle in appropriate form according to 'method'.
-   if (strcmp(method, "decimal") == 0) return angle;
+   if (strcmp(method, "decimal") == 0) return angle; 
    if (strcmp(method, "radians") == 0) return acos(angle);
    if (strcmp(method, "degrees") == 0) {
       double degrees = 57.2957795 * acos(angle); 
@@ -279,7 +282,7 @@ printf("%d\n", result);
 bool issteep(int dim, double vector1[dim], double vector2[dim]) {
    // Can be used 'angle' method for this problem.
    double degrees = angle("degrees", dim, vector1, vector2);
-   return (degrees == 90.0) ? true : false;
+   return ((float) degrees == 90.0) ? true : false;
 }
 
 /* Return true, if the 'vector1' and 'vector2' are parallel. For
@@ -294,5 +297,6 @@ printf("%d\n", result);
 bool isparallel(int dim, double vector1[dim], double vector2[dim]){
    // Can be used 'angle' method for this problem.
    double degrees = angle("degrees", dim, vector1, vector2);
-   return (degrees == 180.0) ? true : false;
+   return ((float) degrees == 180.0) ? true : false;
 }
+
